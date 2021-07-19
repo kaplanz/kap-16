@@ -26,16 +26,16 @@ Due to the constraints of 16-bit instruction registers, a key innovation of the 
 Instead of using a traditional fixed-width opcode, [Huffman codings](https://en.wikipedia.org/wiki/Huffman_coding) are instead used to design a variable-width opcode format.
 
 | Instruction                      | Opcode |
-| -------------------------------- | ------ |
-| [Move](./instr/MOV.md)           |        |
-| [Branch](./instr/BRA.md)         |        |
-| [Load](./instr/LDR.md)           |        |
-| [Store](./instr/STR.md)          |        |
-| [Compare](./instr/CMP.md)        |        |
-| [Shift](./instr/SHF.md)          |        |
-| [Logical And](./instr/AND.md)    |        |
-| [Logical Or](./instr/ORR.md)     |        |
-| [Logical Xor](./instr/XOR.md)    |        |
-| [Addition](./instr/ADD.md)       |        |
-| [Subtraction](./instr/SUB.md)    |        |
-| [Multiplication](./instr/MUL.md) |        |
+| -------------------------------- | -----: |
+| [Move](./instr/MOV.md)           |   1010 |
+| [Branch](./instr/BRA.md)         |   1111 |
+| [Load](./instr/LDR.md)           |   1011 |
+| [Store](./instr/STR.md)          |   1101 |
+| [Compare](./instr/CMP.md)        |     00 |
+| [Shift](./instr/SHF.md)          |   1110 |
+| [Logical And](./instr/AND.md)    |   0110 |
+| [Logical Or](./instr/ORR.md)     |   0100 |
+| [Logical Xor](./instr/XOR.md)    |   0101 |
+| [Addition](./instr/ADD.md)       |   1100 |
+| [Subtraction](./instr/SUB.md)    |    100 |
+| [Multiplication](./instr/MUL.md) |   0111 |
