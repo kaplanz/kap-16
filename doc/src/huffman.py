@@ -10,7 +10,6 @@ import argparse
 import csv
 from dataclasses import dataclass
 from heapq import heappop, heappush
-import os
 import sys
 from typing import Any, Dict, List, Optional
 
@@ -30,7 +29,6 @@ def main():
         "-o",
         "--output",
         type=str,
-        default=os.ttyname(sys.stdout.fileno()),
         metavar="FILE",
         help="output file",
     )
@@ -55,13 +53,19 @@ def main():
     for symbol in weights.keys():
         codewords[symbol] = huff.codeword(symbol)
 
-    # Write codewords to output
+    # Open output file
     if args.output:
-        with open(args.output, "w") as o:
-            writer = csv.writer(o)
-            writer.writerow(["symbol", "weight", "codeword"])
-            for symbol, codeword in codewords.items():
-                writer.writerow((symbol, weights[symbol], codeword))
+        o = open(args.output, "w")
+    else:
+        o = sys.stdout
+    # Write codewords to output
+    writer = csv.writer(o)
+    writer.writerow(["symbol", "weight", "codeword"])
+    for symbol, codeword in codewords.items():
+        writer.writerow((symbol, weights[symbol], codeword))
+    # Close output file
+    if args.output:
+        o.close()
 
 
 class Huffman:
