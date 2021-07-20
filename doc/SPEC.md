@@ -39,3 +39,73 @@ Instead of using a traditional fixed-width opcode, [Huffman codings](https://en.
 | [Addition](./instr/ADD.md)       |   1100 |
 | [Subtraction](./instr/SUB.md)    |    100 |
 | [Multiplication](./instr/MUL.md) |   0111 |
+
+## LANv1
+
+As with any microprocessor, the `KAP-16` comes with its own assembly language: LAN, short for **L**ight **A**ssembly **N**otation.
+LAN is loosely based on ARM, but the notation does differ in several places, notably in addressing modes for the `LDR` and `STR` instructions.
+
+### General Format
+
+A typical LAN instruction has 0-2 operands, with the second operand usually allowing for 7-bit immediate data instead of a register.
+For detailed information on an instruction, refer to its manual page in [`doc/instr`](./doc/instr).
+
+General guidelines are as follows:
+- All registers may be referred to by either their index (`Rx`), or their alias (e.g. `PC`).
+- Operands are to be separated by a single comma (`,`).
+- Extra whitespace is ignored by the assembler, so feel free to align instructions as you see fit.
+- Literal integer constants **must** specify their radix using one of the following prefixes:
+  - Binary: `0b`
+  - Octal: `0o`
+  - Decimal: `0d`
+  - Hexadecimal: `0x`
+- Whenever an instruction interacts with memory (including immediate), use C-style pointer notation:
+ - A [load](./instr/LDR.md) must dereference an address with `*`.
+ - A [store](./instr/STR.md) must resolve an address with `&`.
+
+#### Example
+
+Here is a sample program in LAN, finding the 7th number in the Fibonacci sequence.
+
+```asm
+_main:
+    MOV R0, 0d1  ; use R0, R1 to store the most recent...
+    MOV R1, 0d1  ; ... two numbers in the sequence
+    MOV R2, 0d0  ; use R2 as a counter
+LOOP:
+    ADD R0, R1   ; compute the R2th number
+    ADD R1, R0   ; computer the (R2 + 1)st number
+    ADD R2, 0b2
+    CMP R2, 0b7  ; check if we've reached 7...
+    BLT &LOOP    ; ... loop until we're done
+                 ; R0, R1 now store the 6th, 7th numbers
+```
+
+### Immediate Data
+
+Most instructions allow the final operand to, instead of a register, be supplied as immediate data.
+The following table outlines the immediate data various instructions accept.
+
+| Instruction | Accepts Immediate | Data Width |
+| ----------- | ----------------- | ---------- |
+| ADD         | &check;           | 7-bit      |
+| AND         | &check;           | 7-bit      |
+| BRA         | &check;           | 7-bit      |
+| CMN         | &check;           | 7-bit      |
+| CMP         | &check;           | 7-bit      |
+| LDR         | &check;           | 7-bit      |
+| MOV         | &check;           | 7-bit      |
+| MUL         | &check;           | 7-bit      |
+| NEG         | &cross;           | —          |
+| NOP         | &cross;           | —          |
+| NOT         | &cross;           | —          |
+| ORR         | &check;           | 7-bit      |
+| POP         | &cross;           | —          |
+| PUSH        | &cross;           | —          |
+| RSB         | &check;           | 7-bit      |
+| SHF         | &check;           | 4-bit      |
+| STR         | &check;           | 7-bit      |
+| SUB         | &check;           | 7-bit      |
+| TEQ         | &check;           | 7-bit      |
+| TST         | &check;           | 7-bit      |
+| XOR         | &check;           | 7-bit      |
