@@ -1,4 +1,4 @@
-#### Store
+## Store
 
 Uses:
 `STR`, `PUSH`
@@ -14,7 +14,7 @@ Notes:
 - Before using `PUSH`, the stack pointer is first decremented by 2.
 
 Examples:
-```asm
+```assembly
 STR Rx, &Ry   ; load data from Rx into address in Ry
               ; a.k.a: *Ry <- Rx
 STR Rx, &0x40 ; load data from Rx into address offset +0x40

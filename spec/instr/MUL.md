@@ -1,4 +1,4 @@
-#### Multiplication
+## Multiply
 
 Uses:
 `MUL`
@@ -10,7 +10,7 @@ Description:
 > Perform an arithmetic multiplication.
 
 Examples:
-```asm
+```assembly
 MUL Rx, Ry   ; set Rx <- Rx * Ry
 MUL Rx, 0d10 ; set Rx <- Rx * 10
 ```

@@ -1,25 +1,25 @@
-#### Logical Or
+## Logical AND
 
 Uses:
-`ORR`
+`AND`
 
 Mnemonics:
-- Logical **OR**
+- Logical **AND**
 
 Description:
-> Perform a logical OR operation.
+> Perform a logical AND operation.
 
 Examples:
-```asm
-AND Rx, Ry   ; set Rx <- Rx | Ry
-AND Rx, 0x04 ; set Rx <- Rx | 0x04
+```assembly
+AND Rx, Ry   ; set Rx <- Rx & Ry
+AND Rx, 0x0F ; set Rx <- Rx & 0x0F
 ```
 
 Format (Op2):
 ```
 │15  12│11   8│ 7 │6   4│3    0│
 ┌──────┬──────┬───┬─────┬──────┐
-│ 0100 │ XXXX │ 0 │ --- │ YYYY │
+│ 0110 │ XXXX │ 0 │ --- │ YYYY │
 └──────┴──────┴───┴─────┴──────┘
 ```
 
@@ -27,7 +27,7 @@ Format (Imm):
 ```
 │15  12│11   8│ 7 │6       0│
 ┌──────┬──────┬───┬─────────┐
-│ 0100 │ XXXX │ 1 │ DDDDDDD │
+│ 0110 │ XXXX │ 1 │ DDDDDDD │
 └──────┴──────┴───┴─────────┘
 ```
 

@@ -1,4 +1,4 @@
-#### Shift
+## Shift
 
 Uses:
 `LSR`, `ASR`, `ROR`,
@@ -18,7 +18,7 @@ Notes:
 - Rotations will spill over shifted bits.
 
 Examples:
-```asm
+```assembly
 LSL Rx, Ry   ; set Rx <- Rx L<< Ry
 ASR Rx, 0d10 ; set Rx <- Rx A>> 10
 ROR Rx, Ry   ; set Rx <- Rx R>> Ry
@@ -64,4 +64,4 @@ Mode (M):
 | `00` | LSR     |
 | `01` | RSR     |
 | `10` | ROR     |
-| `11` | —       |
+| `11` | &mdash; |

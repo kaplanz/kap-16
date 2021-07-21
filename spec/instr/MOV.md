@@ -1,4 +1,4 @@
-#### Move
+## Move
 
 Uses:
 `MOV`, `NEG`, `NOT`, `NOP`
@@ -19,7 +19,7 @@ Notes:
 - Only supports 7-bit immediate data, for more see [`LDR`](./LDR.md).
 
 Examples:
-```asm
+```assembly
 MOV Rx, Ry   ; set Rx <- Ry
 MOV Rx, 0d16 ; set Rx <- 16
 NEG Rx       ; set Rx <- ~Rx
@@ -60,7 +60,7 @@ Mode (M):
 | `00` | MOV     |
 | `01` | NEG     |
 | `10` | NOT     |
-| `11` | —       |
+| `11` | &mdash; |
 
 Pseudo-instructions:
 - `NOP := MOV R0, R0 ; no operation`

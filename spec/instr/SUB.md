@@ -1,4 +1,4 @@
-#### Subtraction
+## Subtract
 
 Uses:
 `SUB`, `RSB`
@@ -11,7 +11,7 @@ Description:
 > Perform an arithmetic subtraction.
 
 Examples:
-```asm
+```assembly
 SUB Rx, Ry   ; set Rx <- Rx - Ry
 SUB Rx, 0d10 ; set Rx <- Rx - 10
 RSB Rx, Ry   ; set Rx <- Ry - Rx

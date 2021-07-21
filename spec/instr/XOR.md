@@ -1,25 +1,25 @@
-#### Logical And
+## Logical XOR
 
 Uses:
-`AND`
+`XOR`
 
 Mnemonics:
-- Logical **AND**
+- Logical e**X**clusive **OR**
 
 Description:
-> Perform a logical AND operation.
+> Perform a logical XOR operation.
 
 Examples:
-```asm
-AND Rx, Ry   ; set Rx <- Rx & Ry
-AND Rx, 0x0F ; set Rx <- Rx & 0x0F
+```assembly
+AND Rx, Ry   ; set Rx <- Rx ^ Ry
+AND Rx, 0x2A ; set Rx <- Rx ^ 0x2A
 ```
 
 Format (Op2):
 ```
 │15  12│11   8│ 7 │6   4│3    0│
 ┌──────┬──────┬───┬─────┬──────┐
-│ 0110 │ XXXX │ 0 │ --- │ YYYY │
+│ 0101 │ XXXX │ 0 │ --- │ YYYY │
 └──────┴──────┴───┴─────┴──────┘
 ```
 
@@ -27,7 +27,7 @@ Format (Imm):
 ```
 │15  12│11   8│ 7 │6       0│
 ┌──────┬──────┬───┬─────────┐
-│ 0110 │ XXXX │ 1 │ DDDDDDD │
+│ 0101 │ XXXX │ 1 │ DDDDDDD │
 └──────┴──────┴───┴─────────┘
 ```
 

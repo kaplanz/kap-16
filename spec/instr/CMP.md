@@ -1,4 +1,4 @@
-#### Compare
+## Compare
 
 Uses:
 `CMP`, `CMN`, `TST`, `TEQ`
@@ -22,7 +22,7 @@ Operation:
 | `TEQ`       | `Rx ^ Ry` (XOR) |
 
 Examples:
-```asm
+```assembly
 CMP Rx, Ry    ; compare Rx - Ry
 TEQ Rx, 0x77  ; compare Rx ^ 0x77
 ```

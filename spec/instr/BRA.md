@@ -1,4 +1,4 @@
-#### Branch
+## Branch
 
 Uses:
 `B[L]{[RA],EQ,NQ,LT,LE,GE,GT}`
@@ -17,7 +17,7 @@ Description:
 > Functionally equivalent to moving into the PC.
 
 Examples:
-```asm
+```assembly
 BL   &Ry    ; branch to address in Ry after performing a link
 BLRA &Ry    ; synonym of above (RA := unconditional branch)
             ; a.k.a: LR <- PC, PC <- Ry
@@ -67,4 +67,4 @@ Condition Code (C):
 | `100` | LE      |
 | `101` | GE      |
 | `110` | GT      |
-| `111` | —       |
+| `111` | &mdash; |

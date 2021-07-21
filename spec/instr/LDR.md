@@ -1,4 +1,4 @@
-#### Load
+## Load
 
 Uses:
 `LDR`, `POP`
@@ -17,7 +17,7 @@ Notes:
 - After using `POP`, the stack pointer is then incremented by 2.
 
 Examples:
-```asm
+```assembly
 LDR Rx, *Ry     ; load data from address in Ry into Rx
                 ; a.k.a: Rx <- *Ry
 LDR Rx, *0x40   ; load data from address offset +0x40 into Rx
