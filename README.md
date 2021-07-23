@@ -5,13 +5,19 @@
 </p>
 
 <p align="center">
-  A toy 16-bit microprocessor architecture.
+  <q>
+    If you wish to make an apple pie from scratch, you must first invent the universe.
+  </q>
+  &mdash;
+  <i>
+    Carl Sagan
+  </i>
 </p>
 
 ---
 
-KAP-16 is a 16-bit, little endian, [von Neumann architecture][von-neumann-architecture] microprocessor.
-It runs the included LANv1 instruction set architecture (ISA).
+KAP-16 &mdash; short for **K**inda **A**dequate **P**rocessor, **16**-bit &mdash; is a toy microprocessor architecture.
+It runs its own instruction set architecture (ISA) called LANv1: **L**ite **A**ssembly **N**otation, **v**ersion **1**.
 
 ## Contents
 
@@ -36,5 +42,3 @@ Read the [`README.md`](./asm/README.md) for information on building and running 
 
 A fully functional emulator for the KAP-16 can be found inside the [`emu/`](./emu) directory.
 Read the [`README.md`](./emu/README.md) for information on building and running the emulator.
-
-[von-neumann-architecture]: https://en.wikipedia.org/wiki/Von_Neumann_architecture

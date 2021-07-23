@@ -2,6 +2,8 @@
 
 ## KAP-16
 
+KAP-16 is a 16-bit, little endian, [von Neumann architecture][von-neumann-architecture] microprocessor.
+
 ### Instructions
 
 Due to the constraints of 16-bit instruction registers, KAP-16 uses an interesting instruction opcode format:
@@ -69,6 +71,7 @@ The [program counter][program-counter] (PC), also known as R15, performs one of 
 it keeps track of the current instruction within the running program, and increments ("counts") to the next instruction every cycle.
 While it can be written to as with any other register, it is typically only modified by the programmer through the [`BRA`](./instr/BRA.md) family of instructions.
 
+[von-neumann-architecture]: https://en.wikipedia.org/wiki/Von_Neumann_architecture
 [huffman-codings]: https://en.wikipedia.org/wiki/Huffman_coding
 [stack-pointer]: https://en.wikipedia.org/wiki/Call_stack#STACK-POINTER
 [hardware-stack]: https://en.wikipedia.org/wiki/Stack_(abstract_data_type)#Hardware_stack
