@@ -9,3 +9,6 @@ CONFIG ?= BASIC
 # Extensions
 .cc = .cc
 .h = .h
+
+# Flags
+LDLIBS   = -lclip
