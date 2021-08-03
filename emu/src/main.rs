@@ -1,3 +1,5 @@
+use emu::Emulator;
+
 fn main() {
-    println!("Hello, world!");
+    Emulator::new().main("a.out");
 }
