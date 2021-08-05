@@ -2,20 +2,22 @@
 //!
 //! `emu` is an emulator for the KAP-16 microprocessor.
 
-use std::fmt::{self, Debug};
+use std::fmt::{self, Debug, Display};
 use std::fs::File;
 use std::io::Read;
 use std::mem;
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 mod inst;
+use inst::Instruction;
 
 #[allow(non_camel_case_types)]
 type iarch = i16;
 #[allow(non_camel_case_types)]
 type uarch = u16;
 
-const ROMSIZE: usize = 0x0020;
+const ARCHSIZE: usize = mem::size_of::<uarch>();
+const ROMSIZE: usize = 0x1000;
 
 pub struct Emulator {
     proc: Processor,
@@ -35,40 +37,46 @@ impl Emulator {
 
     fn load(&mut self, file: &str) -> std::io::Result<()> {
         let mut f = File::open(file)?;
-        let rom = unsafe {
-            const U8ROMSIZE: usize = mem::size_of::<uarch>() * ROMSIZE;
-            mem::transmute::<&mut [uarch; ROMSIZE], &mut [u8; U8ROMSIZE]>(&mut self.proc.rom.0)
-        };
-        f.read_exact(rom)
+        f.read_exact(&mut self.proc.rom.0)
     }
 
     fn run(&mut self) {
-        for i in 0..ROMSIZE {
-            let instr = inst::decode(self.proc.rom.0[i]);
-            instr.execute(&mut self.proc);
+        loop {
+            let instr = self.proc.cycle();
+            println!("{}", instr);
         }
     }
 }
 
+#[derive(Debug, Default)]
 pub struct Processor {
     regs: [Register; 16],
+    sr: Register,
     rom: Rom,
 }
 
 impl Processor {
     fn new() -> Self {
         Self {
-            regs: Default::default(),
-            rom: Rom([0; ROMSIZE]),
+            ..Default::default()
         }
+    }
+
+    fn cycle(&mut self) -> Box<dyn Instruction> {
+        let pc = *self.regs[15] as usize;
+        *self.regs[15] += ARCHSIZE as uarch;
+        let word = self.rom[pc];
+        let instr = inst::decode(word);
+        instr.execute(self);
+        instr
     }
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 struct Register(uarch);
 
-impl Debug for Register {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl Display for Register {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:04x}", self.0)
     }
 }
@@ -87,21 +95,44 @@ impl DerefMut for Register {
     }
 }
 
-struct Rom([uarch; ROMSIZE]);
+#[derive(Debug)]
+struct Rom([u8; ROMSIZE]);
 
-impl Debug for Rom {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        const CHUNK: usize = 4;
-        for (i, data) in self.0.chunks(CHUNK).enumerate() {
+impl Display for Rom {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        const ROWSIZE: usize = mem::size_of::<usize>();
+        for (i, row) in self.0.chunks(ROWSIZE).enumerate() {
             if i != 0 {
                 writeln!(f)?;
             }
-            write!(f, "{:#06x}:", CHUNK * i)?;
-            for word in data {
+            write!(f, "{:#06x}:", ROWSIZE * i)?;
+            for word in row {
                 write!(f, " {:04x}", word)?;
             }
         }
         write!(f, "")
+    }
+}
+
+impl Default for Rom {
+    fn default() -> Self {
+        Self([0; ROMSIZE])
+    }
+}
+
+impl Index<usize> for Rom {
+    type Output = uarch;
+
+    fn index(&self, idx: usize) -> &Self::Output {
+        assert!((idx % 2) == 0);
+        unsafe { &self.0.align_to::<uarch>().1[idx / ARCHSIZE] }
+    }
+}
+
+impl IndexMut<usize> for Rom {
+    fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
+        assert!((idx % 2) == 0);
+        unsafe { &mut self.0.align_to_mut::<uarch>().1[idx / ARCHSIZE] }
     }
 }
 

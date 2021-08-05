@@ -5,20 +5,21 @@ use crate::{iarch, uarch, Processor};
 
 #[derive(Debug)]
 enum Mode {
-    Mov,
-    Neg,
-    Not,
+    Cmp,
+    Cmn,
+    Tst,
+    Teq,
 }
 
 #[derive(Debug)]
-pub struct Mov {
+pub struct Cmp {
     op1: usize,
     op2: usize,
     imm: Option<iarch>,
     mode: Mode,
 }
 
-impl Display for Mov {
+impl Display for Cmp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let label = format!("{:?}", self.mode).to_string().to_lowercase();
         let op1 = format!("r{}", self.op1);
@@ -30,9 +31,9 @@ impl Display for Mov {
     }
 }
 
-impl Instruction for Mov {
+impl Instruction for Cmp {
     fn new(word: uarch) -> Self {
-        assert_eq!((word >> 12), 0b1010);
+        assert_eq!((word >> 14), 0b00);
         Self {
             op1: ((word >> 8) & 0xf) as usize,
             op2: ((word >> 0) & 0xf) as usize,
@@ -40,34 +41,35 @@ impl Instruction for Mov {
                 true => Some(super::sign_extend::<7, { uarch::BITS }>(word & 0x7f)),
                 false => None,
             },
-            mode: match (word & 0x0080) != 0 {
-                true => Mode::Mov,
-                false => match (word >> 4) & 0x3 {
-                    0b00 => Mode::Mov,
-                    0b01 => Mode::Neg,
-                    0b10 => Mode::Not,
-                    _ => panic!(),
-                },
+            mode: match (word >> 12) & 0x3 {
+                0b00 => Mode::Cmp,
+                0b01 => Mode::Cmn,
+                0b10 => Mode::Tst,
+                0b11 => Mode::Teq,
+                _ => panic!(),
             },
         }
     }
 
     fn execute(&self, proc: &mut Processor) {
         // Extract operands
+        let op1 = *proc.regs[self.op1] as iarch;
         let op2 = self.imm.unwrap_or(*proc.regs[self.op2] as iarch);
-        // Calculate result, condition codes
-        let res = match self.mode {
-            Mode::Mov => op2,
-            Mode::Neg => !op2,
-            Mode::Not => -op2,
-        } as uarch;
+        // Calculate condition codes
+        let (res, overflow) = match self.mode {
+            Mode::Cmp => op1.overflowing_sub(op2),
+            Mode::Cmn => op1.overflowing_add(op2),
+            Mode::Tst => (op1 & op2, false),
+            Mode::Teq => (op1 ^ op2, false),
+        };
+        let res = res as uarch;
         let zero = res == 0;
+        let carry = overflow;
         let negative = (res & 0x8000) != 0;
-        // Set result, condition codes
-        *proc.regs[self.op1] = res;
-        *proc.sr ^= (*proc.sr & 0x0001) ^ ((0 as uarch) << 0);
+        // Set condition codes
+        *proc.sr ^= (*proc.sr & 0x0001) ^ ((overflow as uarch) << 0);
         *proc.sr ^= (*proc.sr & 0x0002) ^ ((zero as uarch) << 1);
-        *proc.sr ^= (*proc.sr & 0x0004) ^ ((0 as uarch) << 2);
+        *proc.sr ^= (*proc.sr & 0x0004) ^ ((carry as uarch) << 2);
         *proc.sr ^= (*proc.sr & 0x0008) ^ ((negative as uarch) << 3);
     }
 }
