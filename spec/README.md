@@ -78,7 +78,37 @@ The [program counter][program-counter] (PC), also known as R15, performs one of 
 it keeps track of the current instruction within the running program, and increments ("counts") to the next instruction every cycle.
 While it can be written to as with any other register, it is typically only modified by the programmer through the [`BRA`](./inst/BRA.md) family of instructions.
 
+### Status Register
+
+The [status register][status-register] (SR) is responsible for maintaining current status of the processor, and is different from other registers in several regards.
+Unlike any of the numbered registers, the status register is not addressable by the processor; this means it cannot be read or modified directly.
+Rather, it is updated automatically to reflect the current processor status.
+Several instructions update the condition code flags, which are read by conditional [`BRA`](./inst/BRA.md) instructions.
+
+Layout:
+```
+│15           4│ 3 │ 2 │ 1 │ 0 │
+┌──────────────┬───┬───┬───┬───┐
+│ ------------ │ C │ V │ N │ Z │
+└──────────────┴───┴───┴───┴───┘
+```
+
+Legend:
+| Format   | Use                            |
+| -------- | ------------------------------ |
+| `0`, `1` | Literal bit                    |
+| `C`      | [Carry flag][carry-flag]       |
+| `N`      | [Negative flag][negative-flag] |
+| `V`      | [Overflow flag][overflow-flag] |
+| `Z`      | [Zero flag][zero-flag]         |
+| `-`      | Unused                         |
+
 [stack-pointer]: https://en.wikipedia.org/wiki/Call_stack#STACK-POINTER
 [hardware-stack]: https://en.wikipedia.org/wiki/Stack_(abstract_data_type)#Hardware_stack
 [link-register]: https://en.wikipedia.org/wiki/Link_register
 [program-counter]: https://en.wikipedia.org/wiki/Program_counter
+[status-register]: https://en.wikipedia.org/wiki/Status_register
+[carry-flag]: https://en.wikipedia.org/wiki/Carry_flag
+[negative-flag]: https://en.wikipedia.org/wiki/Negative_flag
+[overflow-flag]: https://en.wikipedia.org/wiki/Overflow_flag
+[zero-flag]: https://en.wikipedia.org/wiki/Zero_flag

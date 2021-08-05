@@ -75,12 +75,12 @@ impl Instruction for Bra {
         };
         let act = match self.cond {
             Cond::Ra => true,
-            Cond::Eq => (*proc.sr & 0x0002) != 0, //  Z
-            Cond::Ne => (*proc.sr & 0x0002) == 0, // !Z
-            Cond::Lt => (*proc.sr & 0x0008) != 0, //  N
-            Cond::Le => (*proc.sr & 0x000a) != 0, //  Z |  N
-            Cond::Ge => ((*proc.sr ^ 0x0008) & 0x000a) != 0, //  Z | !N
-            Cond::Gt => (*proc.sr & 0x000a) == 0, // !N & !Z
+            Cond::Eq => (*proc.sr & 0x0001) != 0, //  Z
+            Cond::Ne => (*proc.sr & 0x0001) == 0, // !Z
+            Cond::Lt => (*proc.sr & 0x0002) != 0, //  N
+            Cond::Le => (*proc.sr & 0x0003) != 0, //  Z |  N
+            Cond::Ge => ((*proc.sr ^ 0x0002) & 0x0003) != 0, //  Z | !N
+            Cond::Gt => (*proc.sr & 0x0003) == 0, // !N & !Z
         };
         // Set result
         if act {

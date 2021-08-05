@@ -55,19 +55,13 @@ impl Instruction for Mov {
     fn execute(&self, proc: &mut Processor) {
         // Extract operands
         let op2 = self.imm.unwrap_or(*proc.regs[self.op2] as iarch);
-        // Calculate result, condition codes
+        // Calculate result
         let res = match self.mode {
             Mode::Mov => op2,
             Mode::Neg => !op2,
             Mode::Not => -op2,
         } as uarch;
-        let zero = res == 0;
-        let negative = (res & 0x8000) != 0;
-        // Set result, condition codes
+        // Set result
         *proc.regs[self.op1] = res;
-        *proc.sr ^= (*proc.sr & 0x0001) ^ ((0 as uarch) << 0);
-        *proc.sr ^= (*proc.sr & 0x0002) ^ ((zero as uarch) << 1);
-        *proc.sr ^= (*proc.sr & 0x0004) ^ ((0 as uarch) << 2);
-        *proc.sr ^= (*proc.sr & 0x0008) ^ ((negative as uarch) << 3);
     }
 }

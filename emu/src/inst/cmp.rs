@@ -64,12 +64,12 @@ impl Instruction for Cmp {
         };
         let res = res as uarch;
         let zero = res == 0;
-        let carry = overflow;
         let negative = (res & 0x8000) != 0;
+        let carry = overflow;
         // Set condition codes
-        *proc.sr ^= (*proc.sr & 0x0001) ^ ((overflow as uarch) << 0);
-        *proc.sr ^= (*proc.sr & 0x0002) ^ ((zero as uarch) << 1);
-        *proc.sr ^= (*proc.sr & 0x0004) ^ ((carry as uarch) << 2);
-        *proc.sr ^= (*proc.sr & 0x0008) ^ ((negative as uarch) << 3);
+        *proc.sr ^= (*proc.sr & 0x0001) ^ ((zero as uarch) << 0);
+        *proc.sr ^= (*proc.sr & 0x0002) ^ ((negative as uarch) << 1);
+        *proc.sr ^= (*proc.sr & 0x0004) ^ ((overflow as uarch) << 2);
+        *proc.sr ^= (*proc.sr & 0x0008) ^ ((carry as uarch) << 3);
     }
 }

@@ -27,6 +27,34 @@ Read about it [here](../doc/huffman/README.md) for further details.
 | [Subtract](./inst/SUB.md)    |    100 |
 | [Multiply](./inst/MUL.md)    |   0111 |
 
+### Condition Codes
+
+After
+
+| Instruction              | Modifies |
+| ------------------------ | -------- |
+| [`ADD`](./inst/ADD.md)   | &check;  |
+| [`AND`](./inst/AND.md)   | &check;  |
+| [`BRA`](./inst/BRA.md)   |          |
+| [`CMN`](./inst/CMN.md)   | &check;  |
+| [`CMP`](./inst/CMP.md)   | &check;  |
+| [`LDR`](./inst/LDR.md)   |          |
+| [`MOV`](./inst/MOV.md)   |          |
+| [`MUL`](./inst/MUL.md)   | &check;  |
+| [`NEG`](./inst/NEG.md)   |          |
+| [`NOP`](./inst/NOP.md)   | &cross;  |
+| [`NOT`](./inst/NOT.md)   |          |
+| [`ORR`](./inst/ORR.md)   | &check;  |
+| [`POP`](./inst/POP.md)   |          |
+| [`PUSH`](./inst/PUSH.md) |          |
+| [`RSB`](./inst/RSB.md)   | &check;  |
+| [`SHF`](./inst/SHF.md)   | &check;  |
+| [`STR`](./inst/STR.md)   |          |
+| [`SUB`](./inst/SUB.md)   | &check;  |
+| [`TEQ`](./inst/TEQ.md)   | &check;  |
+| [`TST`](./inst/TST.md)   | &check;  |
+| [`XOR`](./inst/XOR.md)   | &check;  |
+
 ### Immediates
 
 Most instructions allow the final operand to, instead of a register, be supplied as immediate data.
