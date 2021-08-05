@@ -5,7 +5,7 @@ Uses:
 
 Mnemonics:
 - **C**o**MP**are
-- **C**o**M**pare additio*N*
+- **C**o**M**pare additio**N**
 - **T**e**ST** (AND)
 - **T**e**S**t e**q**uql (XOR)
 

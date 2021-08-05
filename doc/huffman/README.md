@@ -14,7 +14,7 @@ In this architecture, they have been used to determined the opcodes of the basic
 To generate Huffman codings, run [`huffman.py`](./src/huffman.py):
 
 ```sh
-./src/huffman.py data/instr.csv
+./src/huffman.py data/inst.csv
 ```
 
 Pass the `--help` flag for more info on running the script.

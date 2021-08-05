@@ -3,13 +3,63 @@
 ## LANv1
 
 LANv1, short for **L**ite **A**ssembly **N**otation (**v**ersion **1**), is KAP-16's instruction set.
-As a RISC "load–store" architecture, the [`LDR`](./instr/LDR.md) and [`STR`](./instr/STR.md) instructions (along with their pseudo-instructions) are the sole interface to memory; all other instructions perform operations between registers.
+As a RISC "load–store" architecture, the [`LDR`](./inst/LDR.md) and [`STR`](./inst/STR.md) instructions (along with their pseudo-instructions) are the sole interface to memory; all other instructions perform operations between registers.
 The ISA is inspired by ARM, but the notation does differ in several places.
 
-### General
+### Instructions
+
+Due to the constraints of 16-bit instruction registers, KAP-16 uses an interesting instruction opcode format:
+Instead of a traditional fixed-width opcode, [Huffman codings][huffman-codings] were used to design a variable-width opcode format.
+Read about it [here](../doc/huffman/README.md) for further details.
+
+| Core Instruction             | Opcode |
+| ---------------------------- | -----: |
+| [Move](./inst/MOV.md)        |   1010 |
+| [Branch](./inst/BRA.md)      |   1111 |
+| [Load](./inst/LDR.md)        |   1011 |
+| [Store](./inst/STR.md)       |   1101 |
+| [Compare](./inst/CMP.md)     |     00 |
+| [Shift](./inst/SHF.md)       |   1110 |
+| [Logical AND](./inst/AND.md) |   0110 |
+| [Logical OR](./inst/ORR.md)  |   0100 |
+| [Logical XOR](./inst/XOR.md) |   0101 |
+| [Add](./inst/ADD.md)         |   1100 |
+| [Subtract](./inst/SUB.md)    |    100 |
+| [Multiply](./inst/MUL.md)    |   0111 |
+
+### Immediates
+
+Most instructions allow the final operand to, instead of a register, be supplied as immediate data.
+The following table outlines the immediate data various instructions accept.
+
+| Instruction              | Immediate | Width   | Signed/Extended |
+| ------------------------ | --------- | ------- | --------------- |
+| [`ADD`](./inst/ADD.md)   | &check;   | 7-bit   | &cross;         |
+| [`AND`](./inst/AND.md)   | &check;   | 7-bit   | &check;         |
+| [`BRA`](./inst/BRA.md)   | &check;   | 7-bit   | &check;         |
+| [`CMN`](./inst/CMN.md)   | &check;   | 7-bit   | &check;         |
+| [`CMP`](./inst/CMP.md)   | &check;   | 7-bit   | &check;         |
+| [`LDR`](./inst/LDR.md)   | &check;   | 7-bit   | &check;         |
+| [`MOV`](./inst/MOV.md)   | &check;   | 7-bit   | &check;         |
+| [`MUL`](./inst/MUL.md)   | &check;   | 7-bit   | &check;         |
+| [`NEG`](./inst/NEG.md)   | &cross;   | &mdash; | &mdash;         |
+| [`NOP`](./inst/NOP.md)   | &cross;   | &mdash; | &mdash;         |
+| [`NOT`](./inst/NOT.md)   | &cross;   | &mdash; | &mdash;         |
+| [`ORR`](./inst/ORR.md)   | &check;   | 7-bit   | &check;         |
+| [`POP`](./inst/POP.md)   | &cross;   | &mdash; | &mdash;         |
+| [`PUSH`](./inst/PUSH.md) | &cross;   | &mdash; | &mdash;         |
+| [`RSB`](./inst/RSB.md)   | &check;   | 7-bit   | &cross;         |
+| [`SHF`](./inst/SHF.md)   | &check;   | 4-bit   | &cross;         |
+| [`STR`](./inst/STR.md)   | &check;   | 7-bit   | &check;         |
+| [`SUB`](./inst/SUB.md)   | &check;   | 7-bit   | &cross;         |
+| [`TEQ`](./inst/TEQ.md)   | &check;   | 7-bit   | &check;         |
+| [`TST`](./inst/TST.md)   | &check;   | 7-bit   | &check;         |
+| [`XOR`](./inst/XOR.md)   | &check;   | 7-bit   | &check;         |
+
+### Notation
 
 Each LANv1 instruction has 0-2 operands, with the final operand usually allowing for 7-bit immediate data instead of a register.
-For detailed information on an instruction, refer to its manual page in [`instr/`](./instr).
+For detailed information on an instruction, refer to its manual page in [`inst/`](./inst).
 
 General guidelines are as follows:
 - All registers may be referred to by either their index (`Rx`), or their alias (e.g. `PC`).
@@ -21,8 +71,8 @@ General guidelines are as follows:
   - Decimal: `0d`
   - Hexadecimal: `0x`
 - Whenever interfacing with memory, use C-style pointer notation:
-   - A [load](./instr/LDR.md) must dereference an address with `*`.
-   - A [store](./instr/STR.md) must resolve an address with `&`.
+   - A [load](./inst/LDR.md) must dereference an address with `*`.
+   - A [store](./inst/STR.md) must resolve an address with `&`.
 
 #### Example
 
@@ -42,31 +92,4 @@ LOOP:
                  ; R0, R1 now store the 6th, 7th numbers
 ```
 
-### Immediates
-
-Most instructions allow the final operand to, instead of a register, be supplied as immediate data.
-The following table outlines the immediate data various instructions accept.
-
-| Instruction               | Immediate Mode | Width   |
-| ------------------------- | -------------- | ------- |
-| [`ADD`](./instr/ADD.md)   | &check;        | 7-bit   |
-| [`AND`](./instr/AND.md)   | &check;        | 7-bit   |
-| [`BRA`](./instr/BRA.md)   | &check;        | 7-bit   |
-| [`CMN`](./instr/CMN.md)   | &check;        | 7-bit   |
-| [`CMP`](./instr/CMP.md)   | &check;        | 7-bit   |
-| [`LDR`](./instr/LDR.md)   | &check;        | 7-bit   |
-| [`MOV`](./instr/MOV.md)   | &check;        | 7-bit   |
-| [`MUL`](./instr/MUL.md)   | &check;        | 7-bit   |
-| [`NEG`](./instr/NEG.md)   | &cross;        | &mdash; |
-| [`NOP`](./instr/NOP.md)   | &cross;        | &mdash; |
-| [`NOT`](./instr/NOT.md)   | &cross;        | &mdash; |
-| [`ORR`](./instr/ORR.md)   | &check;        | 7-bit   |
-| [`POP`](./instr/POP.md)   | &cross;        | &mdash; |
-| [`PUSH`](./instr/PUSH.md) | &cross;        | &mdash; |
-| [`RSB`](./instr/RSB.md)   | &check;        | 7-bit   |
-| [`SHF`](./instr/SHF.md)   | &check;        | 4-bit   |
-| [`STR`](./instr/STR.md)   | &check;        | 7-bit   |
-| [`SUB`](./instr/SUB.md)   | &check;        | 7-bit   |
-| [`TEQ`](./instr/TEQ.md)   | &check;        | 7-bit   |
-| [`TST`](./instr/TST.md)   | &check;        | 7-bit   |
-| [`XOR`](./instr/XOR.md)   | &check;        | 7-bit   |
+[huffman-codings]: https://en.wikipedia.org/wiki/Huffman_coding

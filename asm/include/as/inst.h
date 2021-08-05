@@ -1,4 +1,4 @@
-// File:        instr.h
+// File:        inst.h
 // Author:      Zakhary Kaplan <https://zakharykaplan.ca>
 // Created:     22 Jul 2021
 // Version:     0.1.0

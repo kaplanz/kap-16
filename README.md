@@ -25,9 +25,6 @@ It runs its own instruction set architecture (ISA) called LANv1: **L**ite **A**s
 
 KAP-16's specifications are outlined in [`spec/`](./spec).
 Read the [`README.md`](./spec/README.md) for information on the architecture.
-- For the full microarchitecture specification, read [`ARCH.md`](./spec/ARCH.md).
-- For the full instruction set specification, read [`ISA.md`](./spec/ISA.md).
-- For detailed instruction information, refer to the manual pages in [`spec/instr/`](./spec/instr).
 
 ### Assembler
 
