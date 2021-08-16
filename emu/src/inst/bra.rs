@@ -32,7 +32,6 @@ impl Display for Bra {
             },
             self.cond
         )
-        .to_string()
         .to_lowercase();
         let op2 = match self.imm {
             Some(imm) => format!("{:+#07x}", imm),
@@ -46,7 +45,7 @@ impl Instruction for Bra {
     fn new(word: uarch) -> Self {
         assert_eq!((word >> 12), 0b1111);
         Self {
-            op2: ((word >> 0) & 0xf) as usize,
+            op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
                 true => Some(super::sign_extend::<8, { uarch::BITS }>(
                     (ARCHSIZE as uarch) * (word & 0x7f),

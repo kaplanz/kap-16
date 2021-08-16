@@ -62,6 +62,6 @@ Mode (M):
 | Flag | Meaning |
 | ---- | ------- |
 | `00` | LSR     |
-| `01` | RSR     |
+| `01` | ASR     |
 | `10` | ROR     |
 | `11` | &mdash; |

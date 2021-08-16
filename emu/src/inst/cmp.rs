@@ -21,7 +21,7 @@ pub struct Cmp {
 
 impl Display for Cmp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let label = format!("{:?}", self.mode).to_string().to_lowercase();
+        let label = format!("{:?}", self.mode).to_lowercase();
         let op1 = format!("r{}", self.op1);
         let op2 = match self.imm {
             Some(imm) => format!("{:#06x}", imm),
@@ -36,7 +36,7 @@ impl Instruction for Cmp {
         assert_eq!((word >> 14), 0b00);
         Self {
             op1: ((word >> 8) & 0xf) as usize,
-            op2: ((word >> 0) & 0xf) as usize,
+            op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
                 true => Some(super::sign_extend::<7, { uarch::BITS }>(word & 0x7f)),
                 false => None,
@@ -67,7 +67,7 @@ impl Instruction for Cmp {
         let negative = (res & 0x8000) != 0;
         let carry = overflow;
         // Set condition codes
-        *proc.sr ^= (*proc.sr & 0x0001) ^ ((zero as uarch) << 0);
+        *proc.sr ^= (*proc.sr & 0x0001) ^ (zero as uarch);
         *proc.sr ^= (*proc.sr & 0x0002) ^ ((negative as uarch) << 1);
         *proc.sr ^= (*proc.sr & 0x0004) ^ ((overflow as uarch) << 2);
         *proc.sr ^= (*proc.sr & 0x0008) ^ ((carry as uarch) << 3);

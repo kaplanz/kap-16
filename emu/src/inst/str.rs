@@ -34,7 +34,7 @@ impl Instruction for Str {
         assert_eq!((word >> 12), 0b1101);
         Self {
             op1: ((word >> 8) & 0xf) as usize,
-            op2: ((word >> 0) & 0xf) as usize,
+            op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
                 true => Some(super::sign_extend::<8, { uarch::BITS }>(
                     (ARCHSIZE as uarch) * (word & 0x7f),

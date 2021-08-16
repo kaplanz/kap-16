@@ -48,6 +48,12 @@ impl Emulator {
     }
 }
 
+impl Default for Emulator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct Processor {
     regs: [Register; 16],
@@ -138,8 +144,6 @@ impl IndexMut<usize> for Rom {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn it_works() {
         assert_eq!(2 + 2, 4);

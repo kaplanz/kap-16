@@ -20,7 +20,7 @@ pub struct Mov {
 
 impl Display for Mov {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let label = format!("{:?}", self.mode).to_string().to_lowercase();
+        let label = format!("{:?}", self.mode).to_lowercase();
         let op1 = format!("r{}", self.op1);
         let op2 = match self.imm {
             Some(imm) => format!("{:#06x}", imm),
@@ -35,7 +35,7 @@ impl Instruction for Mov {
         assert_eq!((word >> 12), 0b1010);
         Self {
             op1: ((word >> 8) & 0xf) as usize,
-            op2: ((word >> 0) & 0xf) as usize,
+            op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
                 true => Some(super::sign_extend::<7, { uarch::BITS }>(word & 0x7f)),
                 false => None,

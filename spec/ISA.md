@@ -14,18 +14,18 @@ Read about it [here](../doc/huffman/README.md) for further details.
 
 | Core Instruction             | Opcode |
 | ---------------------------- | -----: |
-| [Move](./inst/MOV.md)        |   1010 |
-| [Branch](./inst/BRA.md)      |   1111 |
-| [Load](./inst/LDR.md)        |   1011 |
-| [Store](./inst/STR.md)       |   1101 |
-| [Compare](./inst/CMP.md)     |     00 |
-| [Shift](./inst/SHF.md)       |   1110 |
-| [Logical AND](./inst/AND.md) |   0110 |
-| [Logical OR](./inst/ORR.md)  |   0100 |
-| [Logical XOR](./inst/XOR.md) |   0101 |
-| [Add](./inst/ADD.md)         |   1100 |
-| [Subtract](./inst/SUB.md)    |    100 |
-| [Multiply](./inst/MUL.md)    |   0111 |
+| [Move](./inst/MOV.md)        | `1010` |
+| [Branch](./inst/BRA.md)      | `1111` |
+| [Load](./inst/LDR.md)        | `1011` |
+| [Store](./inst/STR.md)       | `1101` |
+| [Compare](./inst/CMP.md)     |   `00` |
+| [Shift](./inst/SHF.md)       | `1110` |
+| [Logical AND](./inst/AND.md) | `0110` |
+| [Logical OR](./inst/ORR.md)  | `0100` |
+| [Logical XOR](./inst/XOR.md) | `0101` |
+| [Add](./inst/ADD.md)         | `1100` |
+| [Subtract](./inst/SUB.md)    |  `100` |
+| [Multiply](./inst/MUL.md)    | `0111` |
 
 ### Condition Codes
 

@@ -27,7 +27,7 @@ impl Instruction for Add {
         assert_eq!((word >> 12), 0b1100);
         Self {
             op1: ((word >> 8) & 0xf) as usize,
-            op2: ((word >> 0) & 0xf) as usize,
+            op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
                 true => Some(word & 0x7f),
                 false => None,
@@ -46,7 +46,7 @@ impl Instruction for Add {
         let carry = overflow;
         // Set result, condition codes
         *proc.regs[self.op1] = res;
-        *proc.sr ^= (*proc.sr & 0x0001) ^ ((zero as uarch) << 0);
+        *proc.sr ^= (*proc.sr & 0x0001) ^ (zero as uarch);
         *proc.sr ^= (*proc.sr & 0x0002) ^ ((negative as uarch) << 1);
         *proc.sr ^= (*proc.sr & 0x0004) ^ ((overflow as uarch) << 2);
         *proc.sr ^= (*proc.sr & 0x0008) ^ ((carry as uarch) << 3);

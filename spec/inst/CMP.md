@@ -24,6 +24,8 @@ Operation:
 Examples:
 ```assembly
 CMP Rx, Ry    ; compare Rx - Ry
+CMN Rx, 0x10  ; compare Rx + 0x10
+TST Rx, Ry    ; compare Rx & Ry
 TEQ Rx, 0x77  ; compare Rx ^ 0x77
 ```
 

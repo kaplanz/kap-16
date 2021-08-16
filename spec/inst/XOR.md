@@ -11,8 +11,8 @@ Description:
 
 Examples:
 ```assembly
-AND Rx, Ry   ; set Rx <- Rx ^ Ry
-AND Rx, 0x2A ; set Rx <- Rx ^ 0x2A
+XOR Rx, Ry   ; set Rx <- Rx ^ Ry
+XOR Rx, 0x2A ; set Rx <- Rx ^ 0x2A
 ```
 
 Format (Op2):

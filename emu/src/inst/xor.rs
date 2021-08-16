@@ -27,7 +27,7 @@ impl Instruction for Xor {
         assert_eq!((word >> 12), 0b0101);
         Self {
             op1: ((word >> 8) & 0xf) as usize,
-            op2: ((word >> 0) & 0xf) as usize,
+            op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
                 true => Some(super::sign_extend::<7, { uarch::BITS }>(word & 0x7f) as uarch),
                 false => None,
@@ -45,9 +45,9 @@ impl Instruction for Xor {
         let negative = (res & 0x8000) != 0;
         // Set result, condition codes
         *proc.regs[self.op1] = res;
-        *proc.sr ^= (*proc.sr & 0x0001) ^ ((zero as uarch) << 0);
+        *proc.sr ^= (*proc.sr & 0x0001) ^ (zero as uarch);
         *proc.sr ^= (*proc.sr & 0x0002) ^ ((negative as uarch) << 1);
-        *proc.sr ^= (*proc.sr & 0x0004) ^ ((0 as uarch) << 2);
-        *proc.sr ^= (*proc.sr & 0x0008) ^ ((0 as uarch) << 3);
+        *proc.sr ^= *proc.sr & 0x0004;
+        *proc.sr ^= *proc.sr & 0x0008;
     }
 }
