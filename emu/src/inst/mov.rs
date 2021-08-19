@@ -55,7 +55,7 @@ impl Instruction for Mov {
     fn execute(&self, proc: &mut Processor) {
         // Extract operands
         let op2 = self.imm.unwrap_or(*proc.regs[self.op2] as iarch);
-        // Calculate result
+        // Compute result
         let res = match self.mode {
             Mode::Mov => op2,
             Mode::Neg => !op2,

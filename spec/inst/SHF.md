@@ -12,6 +12,9 @@ Mnemonics:
 Description:
 > Perform a logical, arithmetic, or rotate shift.
 
+Condition Codes:
+- Set: carry, overflow, negative, zero
+
 Notes:
 - Logical shifts always fill with zeros.
 - Arithmetic shifts perform sign extension/preservation.

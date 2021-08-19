@@ -1,7 +1,7 @@
 use std::fmt::{self, Display};
 
 use super::Instruction;
-use crate::{iarch, uarch, Processor};
+use crate::{uarch, Processor};
 
 #[derive(Debug)]
 enum Mode {
@@ -15,7 +15,7 @@ enum Mode {
 pub struct Cmp {
     op1: usize,
     op2: usize,
-    imm: Option<iarch>,
+    imm: Option<uarch>,
     mode: Mode,
 }
 
@@ -38,7 +38,7 @@ impl Instruction for Cmp {
             op1: ((word >> 8) & 0xf) as usize,
             op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
-                true => Some(super::sign_extend::<7, { uarch::BITS }>(word & 0x7f)),
+                true => Some(super::sign_extend::<7, { uarch::BITS }>(word & 0x7f) as uarch),
                 false => None,
             },
             mode: match (word >> 12) & 0x3 {
@@ -53,20 +53,28 @@ impl Instruction for Cmp {
 
     fn execute(&self, proc: &mut Processor) {
         // Extract operands
-        let op1 = *proc.regs[self.op1] as iarch;
-        let op2 = self.imm.unwrap_or(*proc.regs[self.op2] as iarch);
-        // Calculate condition codes
-        let (res, overflow) = match self.mode {
+        let op1 = *proc.regs[self.op1];
+        let op2 = self.imm.unwrap_or(*proc.regs[self.op2]);
+        // Compute result
+        let (res, carryout) = match self.mode {
             Mode::Cmp => op1.overflowing_sub(op2),
             Mode::Cmn => op1.overflowing_add(op2),
             Mode::Tst => (op1 & op2, false),
             Mode::Teq => (op1 ^ op2, false),
         };
-        let res = res as uarch;
+        let carryin = ((res ^ op1 ^ op2) & 0x8000) != 0;
+        // Compute condition codes
         let zero = res == 0;
         let negative = (res & 0x8000) != 0;
-        let carry = overflow;
-        // Set condition codes
+        let overflow = match self.mode {
+            Mode::Cmp | Mode::Cmn => carryout ^ carryin,
+            Mode::Tst | Mode::Teq => false,
+        };
+        let carry = match self.mode {
+            Mode::Cmp | Mode::Cmn => carryout,
+            Mode::Tst | Mode::Teq => false,
+        };
+        // Set result, condition codes
         *proc.sr ^= (*proc.sr & 0x0001) ^ (zero as uarch);
         *proc.sr ^= (*proc.sr & 0x0002) ^ ((negative as uarch) << 1);
         *proc.sr ^= (*proc.sr & 0x0004) ^ ((overflow as uarch) << 2);

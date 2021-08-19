@@ -50,7 +50,7 @@ impl Instruction for Str {
         if self.push {
             *proc.regs[13] -= ARCHSIZE as uarch;
         }
-        // Calculate result
+        // Compute result
         let res = match self.imm {
             Some(imm) => (*proc.regs[15] as iarch + imm) as uarch,
             None => match self.push {

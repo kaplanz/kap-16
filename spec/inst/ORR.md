@@ -9,6 +9,10 @@ Mnemonics:
 Description:
 > Perform a logical OR operation.
 
+Condition Codes:
+- Cleared: carry, overflow
+- Set: negative, zero
+
 Examples:
 ```assembly
 ORR Rx, Ry   ; set Rx <- Rx | Ry

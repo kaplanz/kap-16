@@ -13,6 +13,9 @@ Description:
 > Perform a comparison between the two operands, setting condition code flags.
 > No registers are modified by this instruction.
 
+Condition Codes: (see [`ADD`](./ADD.md), [`SUB`](./SUB.md), [`AND`](./AND.md), [`XOR`](./XOR.md))
+- Set: carry, overflow, negative, zero
+
 Operation:
 | Instruction | Operation       |
 | ----------- | --------------- |

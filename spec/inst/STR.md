@@ -10,6 +10,8 @@ Mnemonics:
 Description:
 > Store data from a register into a memory address.
 
+Condition Codes: None
+
 Notes:
 - Before using `PUSH`, the stack pointer is first decremented by 2.
 

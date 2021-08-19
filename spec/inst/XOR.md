@@ -9,6 +9,10 @@ Mnemonics:
 Description:
 > Perform a logical XOR operation.
 
+Condition Codes:
+- Cleared: carry, overflow
+- Set: negative, zero
+
 Examples:
 ```assembly
 XOR Rx, Ry   ; set Rx <- Rx ^ Ry

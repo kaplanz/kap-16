@@ -39,11 +39,14 @@ impl Instruction for Add {
         // Extract operands
         let op1 = *proc.regs[self.op1];
         let op2 = self.imm.unwrap_or(*proc.regs[self.op2]);
-        // Calculate result, condition codes
-        let (res, overflow) = op1.overflowing_add(op2);
+        // Compute result
+        let (res, carryout) = op1.overflowing_add(op2);
+        let carryin = ((res ^ op1 ^ op2) & 0x8000) != 0;
+        // Compute condition codes
         let zero = res == 0;
         let negative = (res & 0x8000) != 0;
-        let carry = overflow;
+        let overflow = carryout ^ carryin;
+        let carry = carryout;
         // Set result, condition codes
         *proc.regs[self.op1] = res;
         *proc.sr ^= (*proc.sr & 0x0001) ^ (zero as uarch);

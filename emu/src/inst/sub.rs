@@ -2,7 +2,7 @@ use std::fmt::{self, Display};
 use std::mem;
 
 use super::Instruction;
-use crate::{iarch, uarch, Processor};
+use crate::{uarch, Processor};
 
 #[derive(Debug)]
 enum Mode {
@@ -50,18 +50,20 @@ impl Instruction for Sub {
 
     fn execute(&self, proc: &mut Processor) {
         // Extract operands
-        let mut op1 = *proc.regs[self.op1] as iarch;
-        let mut op2 = self.imm.unwrap_or(*proc.regs[self.op2]) as iarch;
+        let mut op1 = *proc.regs[self.op1];
+        let mut op2 = self.imm.unwrap_or(*proc.regs[self.op2]);
         match self.mode {
             Mode::Sub => (),
             Mode::Rsb => mem::swap(&mut op1, &mut op2),
         }
-        // Calculate result, condition codes
-        let (res, overflow) = op1.overflowing_sub(op2);
-        let res = res as uarch;
+        // Compute result
+        let (res, carryout) = op1.overflowing_sub(op2);
+        let carryin = ((res ^ op1 ^ op2) & 0x8000) != 0;
+        // Compute condition codes
         let zero = res == 0;
         let negative = (res & 0x8000) != 0;
-        let carry = overflow;
+        let overflow = carryout ^ carryin;
+        let carry = carryout;
         // Set result, condition codes
         *proc.regs[self.op1] = res;
         *proc.sr ^= (*proc.sr & 0x0001) ^ (zero as uarch);

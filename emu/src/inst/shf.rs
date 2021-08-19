@@ -40,7 +40,7 @@ impl Instruction for Shf {
             op1: ((word >> 8) & 0xf) as usize,
             op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
-                true => Some(word & 0x7f),
+                true => Some(word & 0x0f),
                 false => None,
             },
             mode: match (word >> 4) & 0x7 {
@@ -59,28 +59,31 @@ impl Instruction for Shf {
         // Extract operands
         let op1 = *proc.regs[self.op1];
         let op2 = self.imm.unwrap_or(*proc.regs[self.op2]);
-        // Calculate result, condition codes
-        let (res, overflow) = match self.mode {
-            Mode::Lsr => op1.overflowing_shr(op2.into()),
-            Mode::Lsl => op1.overflowing_shl(op2.into()),
-            Mode::Asr => {
-                let (res, overflow) = (op1 as iarch).overflowing_shr(op2.into());
-                (res as uarch, overflow)
-            }
-            Mode::Asl => {
-                let (res, overflow) = (op1 as iarch).overflowing_shl(op2.into());
-                (res as uarch, overflow)
-            }
-            Mode::Ror => (op1.rotate_right(op2.into()), false),
-            Mode::Rol => (op1.rotate_left(op2.into()), false),
+        // Compute result
+        let res = match self.mode {
+            Mode::Lsr => op1.checked_shr(op2.into()).unwrap_or_default(),
+            Mode::Lsl => op1.checked_shl(op2.into()).unwrap_or_default(),
+            Mode::Asr => (op1 as iarch).checked_shr(op2.into()).unwrap_or_default() as uarch,
+            Mode::Asl => (op1 as iarch).checked_shl(op2.into()).unwrap_or_default() as uarch,
+            Mode::Ror => op1.rotate_right(op2.into()),
+            Mode::Rol => op1.rotate_left(op2.into()),
         };
+        let carryout = match self.mode {
+            Mode::Lsr | Mode::Asr => (op1 & 0x0001) != 0,
+            Mode::Lsl | Mode::Asl => (op1 & 0x8000) != 0,
+            Mode::Ror | Mode::Rol => false,
+        };
+        // Compute condition codes
+        // <https://stackoverflow.com/a/20109377>
         let zero = res == 0;
         let negative = (res & 0x8000) != 0;
+        let overflow = carryout ^ negative;
+        let carry = carryout;
         // Set result, condition codes
         *proc.regs[self.op1] = res;
         *proc.sr ^= (*proc.sr & 0x0001) ^ (zero as uarch);
         *proc.sr ^= (*proc.sr & 0x0002) ^ ((negative as uarch) << 1);
         *proc.sr ^= (*proc.sr & 0x0004) ^ ((overflow as uarch) << 2);
-        *proc.sr ^= *proc.sr & 0x0008;
+        *proc.sr ^= (*proc.sr & 0x0008) ^ ((carry as uarch) << 3);
     }
 }

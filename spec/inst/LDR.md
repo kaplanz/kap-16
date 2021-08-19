@@ -10,6 +10,8 @@ Mnemonics:
 Description:
 > Load data from a memory address into a register.
 
+Condition Codes: None
+
 Notes:
 - Using the `LDR` instruction, immediate data wider than 7-bits can be loaded
   into a register. However, in doing so we are still performing a memory access.

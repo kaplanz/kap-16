@@ -44,6 +44,19 @@ impl Emulator {
         loop {
             let instr = self.proc.cycle();
             println!("{}", instr);
+            // XXX: enable to print all registers
+            if false {
+                for (i, reg) in self.proc.regs.iter().enumerate() {
+                    print!("R{:02}: {}", i, reg);
+                    if (i + 1) % 4 != 0 {
+                        print!(", ");
+                    } else {
+                        println!();
+                    }
+                }
+                println!("SR : {:04b}", self.proc.sr.0);
+                println!();
+            }
         }
     }
 }
@@ -107,11 +120,11 @@ struct Rom([u8; ROMSIZE]);
 impl Display for Rom {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const ROWSIZE: usize = mem::size_of::<usize>();
-        for (i, row) in self.0.chunks(ROWSIZE).enumerate() {
+        for (i, row) in self.chunks(ROWSIZE).enumerate() {
             if i != 0 {
                 writeln!(f)?;
             }
-            write!(f, "{:#06x}:", ROWSIZE * i)?;
+            write!(f, "{:#06x}:", ARCHSIZE * ROWSIZE * i)?;
             for word in row {
                 write!(f, " {:04x}", word)?;
             }
@@ -123,6 +136,20 @@ impl Display for Rom {
 impl Default for Rom {
     fn default() -> Self {
         Self([0; ROMSIZE])
+    }
+}
+
+impl Deref for Rom {
+    type Target = [uarch];
+
+    fn deref(&self) -> &Self::Target {
+        unsafe { self.0.align_to::<uarch>().1 }
+    }
+}
+
+impl DerefMut for Rom {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        unsafe { self.0.align_to_mut::<uarch>().1 }
     }
 }
 

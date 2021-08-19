@@ -39,8 +39,9 @@ impl Instruction for And {
         // Extract operands
         let op1 = *proc.regs[self.op1];
         let op2 = self.imm.unwrap_or(*proc.regs[self.op2]);
-        // Calculate result, condition codes
+        // Compute result
         let res = op1 & op2;
+        // Compute condition codes
         let zero = res == 0;
         let negative = (res & 0x8000) != 0;
         // Set result, condition codes

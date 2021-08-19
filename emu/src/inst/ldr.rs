@@ -46,7 +46,7 @@ impl Instruction for Ldr {
     }
 
     fn execute(&self, proc: &mut Processor) {
-        // Calculate result
+        // Compute result
         let res = match self.imm {
             Some(imm) => (*proc.regs[15] as iarch + imm) as uarch,
             None => match self.pop {

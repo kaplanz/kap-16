@@ -9,6 +9,9 @@ Mnemonics:
 Description:
 > Perform an arithmetic multiplication.
 
+Condition Codes:
+- Set: carry, overflow, negative, zero
+
 Examples:
 ```assembly
 MUL Rx, Ry   ; set Rx <- Rx * Ry

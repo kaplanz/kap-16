@@ -10,6 +10,9 @@ Mnemonics:
 Description:
 > Perform an arithmetic subtraction.
 
+Condition Codes:
+- Set: carry, overflow, negative, zero
+
 Examples:
 ```assembly
 SUB Rx, Ry   ; set Rx <- Rx - Ry

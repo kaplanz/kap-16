@@ -67,7 +67,7 @@ impl Instruction for Bra {
     }
 
     fn execute(&self, proc: &mut Processor) {
-        // Calculate results
+        // Compute results
         let res = match self.imm {
             Some(imm) => (*proc.regs[15] as iarch + imm) as uarch,
             None => *proc.regs[self.op2],

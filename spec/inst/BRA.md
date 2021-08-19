@@ -16,6 +16,8 @@ Description:
 > Branch to another instruction if specific conditions have been met.
 > Functionally equivalent to moving into the PC.
 
+Condition Codes: None
+
 Examples:
 ```assembly
 BL   &Ry    ; branch to address in Ry after performing a link

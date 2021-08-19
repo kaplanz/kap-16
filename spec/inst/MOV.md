@@ -9,6 +9,8 @@ Mnemonics:
 - Arithmetic **NOT** (twos complement)
 - **N**o **Op**eration
 
+Condition Codes: None
+
 Description:
 > Copy ("move") the data from one register to another.
 > Provides mode flags for optional ones or twos complement to occur alongside move.

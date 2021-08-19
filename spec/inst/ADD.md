@@ -9,6 +9,9 @@ Mnemonics:
 Description:
 > Perform an arithmetic addition.
 
+Condition Codes:
+- Set: carry, overflow, negative, zero
+
 Examples:
 ```assembly
 ADD Rx, Ry   ; set Rx <- Rx + Ry
