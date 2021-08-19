@@ -7,6 +7,7 @@ use std::fs::File;
 use std::io::Read;
 use std::mem;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
+use std::path::Path;
 
 mod inst;
 use inst::Instruction;
@@ -30,17 +31,15 @@ impl Emulator {
         }
     }
 
-    pub fn main(&mut self, file: &str) {
-        self.load(file).unwrap();
-        self.run();
-    }
-
-    fn load(&mut self, file: &str) -> std::io::Result<()> {
+    pub fn load<P>(&mut self, file: P) -> std::io::Result<()>
+    where
+        P: AsRef<Path>,
+    {
         let mut f = File::open(file)?;
         f.read_exact(&mut self.proc.rom.0)
     }
 
-    fn run(&mut self) {
+    pub fn main(&mut self) {
         loop {
             let instr = self.proc.cycle();
             println!("{}", instr);
