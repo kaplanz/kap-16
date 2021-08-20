@@ -59,6 +59,6 @@ impl Instruction for Str {
             },
         };
         // Set result
-        proc.rom[res as usize] = *proc.regs[self.op1];
+        proc.ram[res as usize] = *proc.regs[self.op1];
     }
 }

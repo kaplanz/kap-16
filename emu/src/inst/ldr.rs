@@ -59,6 +59,6 @@ impl Instruction for Ldr {
             *proc.regs[13] += ARCHSIZE as uarch;
         }
         // Set result
-        *proc.regs[self.op1] = proc.rom[res as usize];
+        *proc.regs[self.op1] = proc.ram[res as usize];
     }
 }

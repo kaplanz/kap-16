@@ -18,7 +18,7 @@ type iarch = i16;
 type uarch = u16;
 
 const ARCHSIZE: usize = mem::size_of::<uarch>();
-const ROMSIZE: usize = 0x1000;
+const RAMSIZE: usize = 0x4000;
 
 pub struct Emulator {
     proc: Processor,
@@ -36,7 +36,7 @@ impl Emulator {
         P: AsRef<Path>,
     {
         let mut f = File::open(file)?;
-        f.read_exact(&mut self.proc.rom.0)
+        f.read_exact(&mut self.proc.ram.0)
     }
 
     pub fn main(&mut self) {
@@ -70,7 +70,7 @@ impl Default for Emulator {
 pub struct Processor {
     regs: [Register; 16],
     sr: Register,
-    rom: Rom,
+    ram: Ram,
 }
 
 impl Processor {
@@ -83,7 +83,7 @@ impl Processor {
     fn cycle(&mut self) -> Box<dyn Instruction> {
         let pc = *self.regs[15] as usize;
         *self.regs[15] += ARCHSIZE as uarch;
-        let word = self.rom[pc];
+        let word = self.ram[pc];
         let instr = inst::decode(word);
         instr.execute(self);
         instr
@@ -114,9 +114,9 @@ impl DerefMut for Register {
 }
 
 #[derive(Debug)]
-struct Rom([u8; ROMSIZE]);
+struct Ram([u8; RAMSIZE]);
 
-impl Display for Rom {
+impl Display for Ram {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const ROWSIZE: usize = mem::size_of::<usize>();
         for (i, row) in self.chunks(ROWSIZE).enumerate() {
@@ -132,13 +132,13 @@ impl Display for Rom {
     }
 }
 
-impl Default for Rom {
+impl Default for Ram {
     fn default() -> Self {
-        Self([0; ROMSIZE])
+        Self([0; RAMSIZE])
     }
 }
 
-impl Deref for Rom {
+impl Deref for Ram {
     type Target = [uarch];
 
     fn deref(&self) -> &Self::Target {
@@ -146,13 +146,13 @@ impl Deref for Rom {
     }
 }
 
-impl DerefMut for Rom {
+impl DerefMut for Ram {
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe { self.0.align_to_mut::<uarch>().1 }
     }
 }
 
-impl Index<usize> for Rom {
+impl Index<usize> for Ram {
     type Output = uarch;
 
     fn index(&self, idx: usize) -> &Self::Output {
@@ -161,7 +161,7 @@ impl Index<usize> for Rom {
     }
 }
 
-impl IndexMut<usize> for Rom {
+impl IndexMut<usize> for Ram {
     fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
         assert!((idx % 2) == 0);
         unsafe { &mut self.0.align_to_mut::<uarch>().1[idx / ARCHSIZE] }
