@@ -15,10 +15,10 @@ Condition Codes:
 
 Examples:
 ```assembly
-SUB Rx, Ry   ; set Rx <- Rx - Ry
-SUB Rx, 0d10 ; set Rx <- Rx - 10
-RSB Rx, Ry   ; set Rx <- Ry - Rx
-RSB Rx, 0d10 ; set Rx <- 10 - Rx
+SUB Rx, Ry    ; set Rx <- Rx - Ry
+SUB Rx, 0d10  ; set Rx <- Rx - 10
+RSB Rx, Ry    ; set Rx <- Ry - Rx
+RSB Rx, 0d10  ; set Rx <- 10 - Rx
 ```
 
 Format (Op2):

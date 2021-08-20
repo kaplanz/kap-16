@@ -22,11 +22,11 @@ Notes:
 
 Examples:
 ```assembly
-MOV Rx, Ry   ; set Rx <- Ry
-MOV Rx, 0d16 ; set Rx <- 16
-NEG Rx       ; set Rx <- ~Rx
-NOT Rx, Ry   ; set Rx <- -Ry
-NOP          ; does nothing
+MOV Rx, Ry    ; set Rx <- Ry
+MOV Rx, 0d16  ; set Rx <- 16
+NEG Rx        ; set Rx <- ~Rx
+NOT Rx, Ry    ; set Rx <- -Ry
+NOP           ; does nothing
 ```
 
 Format (Op2):

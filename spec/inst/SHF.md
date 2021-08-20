@@ -22,9 +22,9 @@ Notes:
 
 Examples:
 ```assembly
-LSL Rx, Ry   ; set Rx <- Rx L<< Ry
-ASR Rx, 0d10 ; set Rx <- Rx A>> 10
-ROR Rx, Ry   ; set Rx <- Rx R>> Ry
+LSL Rx, Ry    ; set Rx <- Rx L<< Ry
+ASR Rx, 0d10  ; set Rx <- Rx A>> 10
+ROR Rx, Ry    ; set Rx <- Rx R>> Ry
 ```
 
 Format (Op2):

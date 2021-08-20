@@ -15,8 +15,8 @@ Condition Codes:
 
 Examples:
 ```assembly
-AND Rx, Ry   ; set Rx <- Rx & Ry
-AND Rx, 0x0F ; set Rx <- Rx & 0x0F
+AND Rx, Ry    ; set Rx <- Rx & Ry
+AND Rx, 0x0F  ; set Rx <- Rx & 0x0F
 ```
 
 Format (Op2):

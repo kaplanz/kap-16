@@ -18,13 +18,18 @@ Description:
 
 Condition Codes: None
 
+Notes:
+- May use a symbol optionally instead of an address offset
+
 Examples:
 ```assembly
 BL   &Ry    ; branch to address in Ry after performing a link
 BLRA &Ry    ; synonym of above (RA := unconditional branch)
             ; a.k.a: LR <- PC, PC <- Ry
-BEQ  0x40   ; branch to address (PC + 0x40), if previous result is zero
+BEQ  +0x40  ; branch to address (PC + 0x40), if previous result is zero
             ; a.k.a: if EQ then PC <- PC + 0x40
+BLNE _foo   ; branch and link to the symbol `_foo`
+            ; (perform a procedure call)
 ```
 
 Format (Op2):

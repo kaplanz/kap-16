@@ -14,15 +14,16 @@ Condition Codes: None
 
 Notes:
 - Before using `PUSH`, the stack pointer is first decremented by 2.
+- May use a symbol optionally instead of an address offset
 
 Examples:
 ```assembly
-STR Rx, &Ry   ; load data from Rx into address in Ry
-              ; a.k.a: *Ry <- Rx
-STR Rx, &0x40 ; load data from Rx into address offset +0x40
-              ; a.k.a: *(PC + 0x40) <- Rx
-PUSH Rx       ; push Rx onto the stack
-              ; a.k.a: SP <- SP - 2, *SP <- Rx
+STR Rx, &Ry     ; load data from Rx into address in Ry
+                ; a.k.a: *Ry <- Rx
+STR Rx, &+0x40  ; load data from Rx into address offset +0x40
+                ; a.k.a: *(PC + 0x40) <- Rx
+PUSH Rx         ; push Rx onto the stack
+                ; a.k.a: SP <- SP - 2, *SP <- Rx
 ```
 
 Format (Op2):
