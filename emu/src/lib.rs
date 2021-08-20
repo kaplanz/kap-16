@@ -4,10 +4,12 @@
 
 use std::fmt::{self, Debug, Display};
 use std::fs::File;
-use std::io::Read;
+use std::io::{self, Read};
 use std::mem;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::path::Path;
+
+use log;
 
 mod inst;
 use inst::Instruction;
@@ -31,31 +33,38 @@ impl Emulator {
         }
     }
 
-    pub fn load<P>(&mut self, file: P) -> std::io::Result<()>
+    pub fn load<P>(&mut self, file: P) -> io::Result<()>
     where
-        P: AsRef<Path>,
+        P: AsRef<Path> + Debug,
     {
-        let mut f = File::open(file)?;
-        f.read_exact(&mut self.proc.ram.0)
+        // Open the ROM file
+        let mut f = File::open(&file)?;
+
+        // Read its contents into memory
+        let buf = &mut self.proc.ram.0;
+        let read = f.read(buf)?;
+
+        // Error checking
+        if read < buf.len() {
+            log::warn!("Read {} bytes from {:?}; padded with zeros.", read, &file);
+        } else if (buf.len() as u64) < f.metadata()?.len() {
+            log::error!(
+                "Read {} bytes from {:?}; truncated remaining {} bytes.",
+                read,
+                &file,
+                f.metadata()?.len() - (read as u64),
+            );
+        }
+
+        Ok(())
     }
 
     pub fn main(&mut self) {
         loop {
             let instr = self.proc.cycle();
-            println!("{}", instr);
-            // XXX: enable to print all registers
-            if false {
-                for (i, reg) in self.proc.regs.iter().enumerate() {
-                    print!("R{:02}: {}", i, reg);
-                    if (i + 1) % 4 != 0 {
-                        print!(", ");
-                    } else {
-                        println!();
-                    }
-                }
-                println!("SR : {:04b}", self.proc.sr.0);
-                println!();
-            }
+            log::info!("{}", instr);
+            log::debug!("{}", self.proc);
+            log::trace!("{}", self.proc.ram);
         }
     }
 }
@@ -88,6 +97,38 @@ impl Processor {
         instr.execute(self);
         instr
     }
+
+    fn flags(&self) -> Vec<Flag> {
+        let mut flags = Vec::new();
+        (self.sr.0 & 0x0008 != 0).then(|| flags.push(Flag::Carry));
+        (self.sr.0 & 0x0004 != 0).then(|| flags.push(Flag::Overflow));
+        (self.sr.0 & 0x0002 != 0).then(|| flags.push(Flag::Negative));
+        (self.sr.0 & 0x0001 != 0).then(|| flags.push(Flag::Zero));
+        flags
+    }
+}
+
+impl Display for Processor {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for (i, reg) in self.regs.iter().enumerate() {
+            write!(f, "R{:02}: {}", i, reg)?;
+            if (i + 1) % 4 != 0 {
+                write!(f, ", ")?;
+            } else {
+                writeln!(f)?;
+            }
+        }
+        write!(f, "SR : {}, {:?}", self.sr, self.flags())?;
+        write!(f, "")
+    }
+}
+
+#[derive(Debug)]
+enum Flag {
+    Carry,
+    Overflow,
+    Negative,
+    Zero,
 }
 
 #[derive(Debug, Default)]
@@ -120,6 +161,9 @@ impl Display for Ram {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         const ROWSIZE: usize = mem::size_of::<usize>();
         for (i, row) in self.chunks(ROWSIZE).enumerate() {
+            if row.iter().all(|&word| word == 0) {
+                continue;
+            }
             if i != 0 {
                 writeln!(f)?;
             }
