@@ -18,7 +18,7 @@ fn main() {
     // Instantiate an emulator
     let mut e = Emulator::new();
     // Load the ROM into memory
-    e.load(opt.rom).unwrap();
+    e.load(&opt.rom).unwrap();
     // Run the emulator
     e.main();
 }

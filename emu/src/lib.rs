@@ -33,12 +33,9 @@ impl Emulator {
         }
     }
 
-    pub fn load<P>(&mut self, file: P) -> io::Result<()>
-    where
-        P: AsRef<Path> + Debug,
-    {
+    pub fn load(&mut self, file: &Path) -> io::Result<()> {
         // Open the ROM file
-        let mut f = File::open(&file)?;
+        let mut f = File::open(file)?;
 
         // Read its contents into memory
         let buf = &mut self.proc.ram.0;
@@ -46,7 +43,7 @@ impl Emulator {
 
         // Error checking
         if read < buf.len() {
-            log::warn!("Read {} bytes from {:?}; padded with zeros.", read, &file);
+            log::warn!("Read {} bytes from {:?}; padded with zeros.", read, file);
         } else if (buf.len() as u64) < f.metadata()?.len() {
             log::error!(
                 "Read {} bytes from {:?}; truncated remaining {} bytes.",
