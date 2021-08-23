@@ -1,7 +1,7 @@
 use std::fmt::{self, Display};
 
 use super::Instruction;
-use crate::{iarch, uarch, Processor, ARCHSIZE};
+use crate::{iarch, uarch, util, Processor, WORDSIZE};
 
 #[derive(Debug)]
 pub struct Str {
@@ -36,9 +36,9 @@ impl Instruction for Str {
             op1: ((word >> 8) & 0xf) as usize,
             op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
-                true => Some(super::sign_extend::<8, { uarch::BITS }>(
-                    (ARCHSIZE as uarch) * (word & 0x7f),
-                )),
+                true => Some(util::sign_extend::<8, { uarch::BITS }>(
+                    (WORDSIZE as uarch) * (word & 0x7f),
+                ) as iarch),
                 false => None,
             },
             push: ((word ^ 0x0040) & 0x00c0) == 0,
@@ -48,7 +48,7 @@ impl Instruction for Str {
     fn execute(&self, proc: &mut Processor) {
         // Decrement frame pointer
         if self.push {
-            *proc.regs[13] -= ARCHSIZE as uarch;
+            *proc.regs[13] -= WORDSIZE as uarch;
         }
         // Compute result
         let res = match self.imm {

@@ -1,33 +1,37 @@
 use std::fmt::{Debug, Display};
 
-use crate::{iarch, uarch, Processor};
+use crate::{uarch, Processor};
 
-mod mov;
-use self::mov::Mov;
-mod bra;
-use self::bra::Bra;
-mod ldr;
-use self::ldr::Ldr;
-mod str;
-use self::str::Str;
-mod cmp;
-use self::cmp::Cmp;
-mod shf;
-use self::shf::Shf;
-mod and;
-use self::and::And;
-mod orr;
-use self::orr::Orr;
-mod xor;
-use self::xor::Xor;
 mod add;
-use self::add::Add;
-mod sub;
-use self::sub::Sub;
+mod and;
+mod bra;
+mod cmp;
+mod ldr;
+mod mov;
 mod mul;
-use self::mul::Mul;
+mod orr;
+mod shf;
+mod str;
+mod sub;
+mod xor;
 
-pub trait Instruction: Debug + Display {
+use self::add::Add;
+use self::and::And;
+use self::bra::Bra;
+use self::cmp::Cmp;
+use self::ldr::Ldr;
+use self::mov::Mov;
+use self::mul::Mul;
+use self::orr::Orr;
+use self::shf::Shf;
+use self::str::Str;
+use self::sub::Sub;
+use self::xor::Xor;
+
+pub trait Instruction
+where
+    Self: Debug + Display,
+{
     fn new(word: uarch) -> Self
     where
         Self: Sized;
@@ -51,9 +55,4 @@ pub fn decode(word: uarch) -> Box<dyn Instruction> {
         0b1111 => Box::from(Bra::new(word)),          // 0xf       => BRA
         _ => panic!("Could not decode: {:#06x}", word),
     }
-}
-
-pub fn sign_extend<const F: u32, const T: u32>(x: uarch) -> iarch {
-    let i = T - F;
-    ((x << i) as iarch) >> i
 }

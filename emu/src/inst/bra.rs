@@ -1,7 +1,7 @@
 use std::fmt::{self, Display};
 
 use super::Instruction;
-use crate::{iarch, uarch, Processor, ARCHSIZE};
+use crate::{iarch, uarch, util, Processor, WORDSIZE};
 
 #[derive(Debug)]
 enum Cond {
@@ -47,9 +47,9 @@ impl Instruction for Bra {
         Self {
             op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
-                true => Some(super::sign_extend::<8, { uarch::BITS }>(
-                    (ARCHSIZE as uarch) * (word & 0x7f),
-                )),
+                true => Some(util::sign_extend::<8, { uarch::BITS }>(
+                    (WORDSIZE as uarch) * (word & 0x7f),
+                ) as iarch),
                 false => None,
             },
             link: (word & 0x0800) != 0,

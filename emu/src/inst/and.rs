@@ -1,7 +1,7 @@
 use std::fmt::{self, Display};
 
 use super::Instruction;
-use crate::{uarch, Processor};
+use crate::{uarch, util, Processor};
 
 #[derive(Debug)]
 pub struct And {
@@ -29,7 +29,7 @@ impl Instruction for And {
             op1: ((word >> 8) & 0xf) as usize,
             op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
-                true => Some(super::sign_extend::<7, { uarch::BITS }>(word & 0x7f) as uarch),
+                true => Some(util::sign_extend::<7, { uarch::BITS }>(word & 0x7f) as uarch),
                 false => None,
             },
         }

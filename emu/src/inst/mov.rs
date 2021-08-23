@@ -1,7 +1,7 @@
 use std::fmt::{self, Display};
 
 use super::Instruction;
-use crate::{iarch, uarch, Processor};
+use crate::{iarch, uarch, util, Processor};
 
 #[derive(Debug)]
 enum Mode {
@@ -37,7 +37,7 @@ impl Instruction for Mov {
             op1: ((word >> 8) & 0xf) as usize,
             op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
-                true => Some(super::sign_extend::<7, { uarch::BITS }>(word & 0x7f)),
+                true => Some(util::sign_extend::<7, { uarch::BITS }>(word & 0x7f) as iarch),
                 false => None,
             },
             mode: match (word & 0x0080) != 0 {

@@ -1,7 +1,7 @@
 use std::fmt::{self, Display};
 
 use super::Instruction;
-use crate::{iarch, uarch, Processor, ARCHSIZE};
+use crate::{iarch, uarch, util, Processor, WORDSIZE};
 
 #[derive(Debug)]
 pub struct Ldr {
@@ -36,9 +36,9 @@ impl Instruction for Ldr {
             op1: ((word >> 8) & 0xf) as usize,
             op2: (word & 0xf) as usize,
             imm: match (word & 0x0080) != 0 {
-                true => Some(super::sign_extend::<8, { uarch::BITS }>(
-                    (ARCHSIZE as uarch) * (word & 0x7f),
-                )),
+                true => Some(util::sign_extend::<8, { uarch::BITS }>(
+                    (WORDSIZE as uarch) * (word & 0x7f),
+                ) as iarch),
                 false => None,
             },
             pop: ((word ^ 0x0040) & 0x00c0) == 0,
@@ -56,7 +56,7 @@ impl Instruction for Ldr {
         };
         // Increment frame pointer
         if self.pop {
-            *proc.regs[13] += ARCHSIZE as uarch;
+            *proc.regs[13] += WORDSIZE as uarch;
         }
         // Set result
         *proc.regs[self.op1] = proc.ram[res as usize];
