@@ -1,13 +1,13 @@
 use std::fmt::{self, Debug, Display};
 
-use super::{uarch, RAMSIZE, WORDSIZE};
+use super::{uarch, BANKSIZE, RAMSIZE, WORDSIZE};
 use crate::inst::{self, Instruction};
 use crate::ram::Ram;
-use crate::reg::Register;
+use crate::reg::{Bank, Register};
 
 #[derive(Debug, Default)]
 pub struct Processor {
-    pub regs: [Register; 16],
+    pub regs: Bank<BANKSIZE>,
     pub sr: Register,
     pub ram: Ram<RAMSIZE>,
 }
@@ -20,7 +20,7 @@ impl Processor {
     }
 
     pub fn cycle(&mut self) -> Box<dyn Instruction> {
-        let pc = *self.regs[15] as usize;
+        let pc = *self.regs[15];
         *self.regs[15] += WORDSIZE as uarch;
         let word = self.ram[pc];
         let instr = inst::decode(word);

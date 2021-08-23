@@ -28,7 +28,7 @@ impl<const N: usize> Display for Ram<N> {
 
 impl<const N: usize> Default for Ram<N> {
     fn default() -> Self {
-        Self([0; N])
+        Self([Default::default(); N])
     }
 }
 
@@ -46,18 +46,18 @@ impl<const N: usize> DerefMut for Ram<N> {
     }
 }
 
-impl<const N: usize> Index<usize> for Ram<N> {
+impl<const N: usize> Index<uarch> for Ram<N> {
     type Output = uarch;
 
-    fn index(&self, idx: usize) -> &Self::Output {
+    fn index(&self, idx: uarch) -> &Self::Output {
         assert!((idx % 2) == 0);
-        unsafe { &self.0.align_to::<uarch>().1[idx / WORDSIZE] }
+        unsafe { &self.0.align_to::<uarch>().1[idx as usize / WORDSIZE] }
     }
 }
 
-impl<const N: usize> IndexMut<usize> for Ram<N> {
-    fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
+impl<const N: usize> IndexMut<uarch> for Ram<N> {
+    fn index_mut(&mut self, idx: uarch) -> &mut Self::Output {
         assert!((idx % 2) == 0);
-        unsafe { &mut self.0.align_to_mut::<uarch>().1[idx / WORDSIZE] }
+        unsafe { &mut self.0.align_to_mut::<uarch>().1[idx as usize / WORDSIZE] }
     }
 }

@@ -20,6 +20,7 @@ type iarch = i16;
 #[allow(non_camel_case_types)]
 type uarch = u16;
 
+const BANKSIZE: usize = 0x10;
 const RAMSIZE: usize = 0x4000;
 const WORDSIZE: usize = mem::size_of::<uarch>();
 
@@ -45,7 +46,12 @@ impl Emulator {
 
         // Error checking
         if read < buf.len() {
-            log::warn!("Read {} bytes from {:?}; padded with zeros.", read, file);
+            log::warn!(
+                "Read {} bytes from {:?}; zero padded remaining {} bytes.",
+                read,
+                file,
+                buf.len() - read
+            );
         } else if (buf.len() as u64) < f.metadata()?.len() {
             log::error!(
                 "Read {} bytes from {:?}; truncated remaining {} bytes.",

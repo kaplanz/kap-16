@@ -1,23 +1,22 @@
 use std::fmt::{self, Display};
 
-use super::Instruction;
+use super::{Instruction, Op2};
 use crate::{iarch, uarch, Processor};
 
 #[derive(Clone, Copy, Debug)]
 enum Mode {
-    Lsr,
-    Asr,
-    Ror,
-    Lsl,
-    Asl,
-    Rol,
+    Lsr = 0b000,
+    Asr = 0b001,
+    Ror = 0b010,
+    Lsl = 0b011,
+    Asl = 0b100,
+    Rol = 0b101,
 }
 
 #[derive(Debug)]
 pub struct Shf {
-    op1: usize,
-    op2: usize,
-    imm: Option<uarch>,
+    op1: uarch,
+    op2: Op2,
     mode: Mode,
 }
 
@@ -25,25 +24,24 @@ impl Display for Shf {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let label = format!("{:?}", self.mode).to_lowercase();
         let op1 = format!("r{}", self.op1);
-        let op2 = match self.imm {
-            Some(imm) => format!("{:#06x}", imm),
-            None => format!("r{}", self.op2),
+        let op2 = match self.op2 {
+            Op2::Op2(op2) => format!("r{}", op2),
+            Op2::Imm(imm) => format!("{:#06x}", imm),
         };
         write!(f, "{} {}, {}", label, op1, op2)
     }
 }
 
-impl Instruction for Shf {
-    fn new(word: uarch) -> Self {
+impl From<uarch> for Shf {
+    fn from(word: uarch) -> Self {
         assert_eq!((word >> 12), 0b1110);
         Self {
-            op1: ((word >> 8) & 0xf) as usize,
-            op2: (word & 0xf) as usize,
-            imm: match (word & 0x0080) != 0 {
-                true => Some(word & 0x0f),
-                false => None,
+            op1: (word & 0x0f00) >> 8,
+            op2: match (word & 0x0080) == 0 {
+                true => Op2::Op2(word & 0x000f),
+                false => Op2::Imm(word & 0x000f),
             },
-            mode: match (word >> 4) & 0x7 {
+            mode: match (word & 0x0070) >> 4 {
                 0b000 => Mode::Lsr,
                 0b001 => Mode::Asr,
                 0b010 => Mode::Ror,
@@ -54,19 +52,38 @@ impl Instruction for Shf {
             },
         }
     }
+}
 
+impl From<Shf> for uarch {
+    fn from(instr: Shf) -> Self {
+        let mut word: uarch = 0;
+        word |= 0b1110 << 12;
+        word |= instr.op1 << 8;
+        word |= (instr.mode as uarch) << 4;
+        word |= match instr.op2 {
+            Op2::Op2(op2) => op2,
+            Op2::Imm(imm) => 0x0080 | imm,
+        };
+        word
+    }
+}
+
+impl Instruction for Shf {
     fn execute(&self, proc: &mut Processor) {
         // Extract operands
         let op1 = *proc.regs[self.op1];
-        let op2 = self.imm.unwrap_or(*proc.regs[self.op2]);
+        let op2 = match self.op2 {
+            Op2::Op2(op2) => *proc.regs[op2],
+            Op2::Imm(imm) => imm,
+        };
         // Compute result
         let res = match self.mode {
-            Mode::Lsr => op1.checked_shr(op2.into()).unwrap_or_default(),
-            Mode::Lsl => op1.checked_shl(op2.into()).unwrap_or_default(),
-            Mode::Asr => (op1 as iarch).checked_shr(op2.into()).unwrap_or_default() as uarch,
-            Mode::Asl => (op1 as iarch).checked_shl(op2.into()).unwrap_or_default() as uarch,
-            Mode::Ror => op1.rotate_right(op2.into()),
-            Mode::Rol => op1.rotate_left(op2.into()),
+            Mode::Lsr => op1.checked_shr(op2 as u32).unwrap_or_default(),
+            Mode::Lsl => op1.checked_shl(op2 as u32).unwrap_or_default(),
+            Mode::Asr => (op1 as iarch).checked_shr(op2 as u32).unwrap_or_default() as uarch,
+            Mode::Asl => (op1 as iarch).checked_shl(op2 as u32).unwrap_or_default() as uarch,
+            Mode::Ror => op1.rotate_right(op2 as u32),
+            Mode::Rol => op1.rotate_left(op2 as u32),
         };
         let carryout = match self.mode {
             Mode::Lsr | Mode::Asr => (op1 & 0x0001) != 0,

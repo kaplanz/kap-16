@@ -2,11 +2,11 @@ use std::path::PathBuf;
 
 use clap::{crate_authors, crate_version, Clap, ValueHint};
 use emu::Emulator;
-use env_logger;
+use env_logger as logger;
 
 fn main() {
     // Initialize logger
-    env_logger::Builder::new()
+    logger::Builder::new()
         .default_format()
         .format_indent(Some(12))
         .format_timestamp(None)

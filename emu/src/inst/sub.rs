@@ -1,20 +1,19 @@
 use std::fmt::{self, Display};
 use std::mem;
 
-use super::Instruction;
+use super::{Instruction, Op2};
 use crate::{uarch, Processor};
 
 #[derive(Debug)]
 enum Mode {
-    Sub,
-    Rsb,
+    Sub = 0b0,
+    Rsb = 0b1,
 }
 
 #[derive(Debug)]
 pub struct Sub {
-    op1: usize,
-    op2: usize,
-    imm: Option<uarch>,
+    op1: uarch,
+    op2: Op2,
     mode: Mode,
 }
 
@@ -22,23 +21,22 @@ impl Display for Sub {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let label = format!("{:?}", self.mode).to_lowercase();
         let op1 = format!("r{}", self.op1);
-        let op2 = match self.imm {
-            Some(imm) => format!("{:#06x}", imm),
-            None => format!("r{}", self.op2),
+        let op2 = match self.op2 {
+            Op2::Op2(op2) => format!("r{}", op2),
+            Op2::Imm(imm) => format!("{:#06x}", imm),
         };
         write!(f, "{} {}, {}", label, op1, op2)
     }
 }
 
-impl Instruction for Sub {
-    fn new(word: uarch) -> Self {
+impl From<uarch> for Sub {
+    fn from(word: uarch) -> Self {
         assert_eq!((word >> 13), 0b100);
         Self {
-            op1: ((word >> 8) & 0xf) as usize,
-            op2: (word & 0xf) as usize,
-            imm: match (word & 0x0080) != 0 {
-                true => Some(word & 0x7f),
-                false => None,
+            op1: (word & 0x0f00) >> 8,
+            op2: match (word & 0x0080) == 0 {
+                true => Op2::Op2(word & 0x000f),
+                false => Op2::Imm(word & 0x007f),
             },
             mode: match (word & 0x1000) >> 12 {
                 0b0 => Mode::Sub,
@@ -47,11 +45,30 @@ impl Instruction for Sub {
             },
         }
     }
+}
 
+impl From<Sub> for uarch {
+    fn from(instr: Sub) -> Self {
+        let mut word: uarch = 0;
+        word |= 0b100 << 13;
+        word |= (instr.mode as uarch) << 12;
+        word |= instr.op1 << 8;
+        word |= match instr.op2 {
+            Op2::Op2(op2) => op2,
+            Op2::Imm(imm) => 0x0080 | imm,
+        };
+        word
+    }
+}
+
+impl Instruction for Sub {
     fn execute(&self, proc: &mut Processor) {
         // Extract operands
         let mut op1 = *proc.regs[self.op1];
-        let mut op2 = self.imm.unwrap_or(*proc.regs[self.op2]);
+        let mut op2 = match self.op2 {
+            Op2::Op2(op2) => *proc.regs[op2],
+            Op2::Imm(imm) => imm,
+        };
         match self.mode {
             Mode::Sub => (),
             Mode::Rsb => mem::swap(&mut op1, &mut op2),
