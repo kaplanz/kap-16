@@ -48,12 +48,14 @@ impl From<Ldr> for uarch {
     fn from(instr: Ldr) -> Self {
         let mut word: uarch = 0;
         word |= 0b1011 << 12;
-        word |= instr.op1 << 8;
-        word |= (instr.pop as uarch) << 6;
+        word |= (instr.op1 << 8) & 0x0f00;
         word |= match instr.op2 {
-            Op2::Op2(op2) => op2,
-            Op2::Imm(imm) => 0x0080 | imm,
-        };
+            Op2::Op2(op2) => match instr.pop {
+                false => op2,
+                true => 0x0040,
+            },
+            Op2::Imm(imm) => 0x0080 | (imm / (WORDSIZE as uarch)),
+        } & 0x00ff;
         word
     }
 }
@@ -74,5 +76,25 @@ impl Instruction for Ldr {
         }
         // Set result
         *proc.regs[self.op1] = proc.ram[res];
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sweep() {
+        for mut word in 0xb000..=0xbfff {
+            let instr = Ldr::from(word);
+            if let Op2::Op2(_) = instr.op2 {
+                word &= 0xffcf;
+            }
+            if instr.pop {
+                word &= 0xffc0;
+            }
+            let decoded: uarch = instr.into();
+            assert_eq!(decoded, word);
+        }
     }
 }

@@ -37,12 +37,12 @@ impl From<uarch> for And {
 impl From<And> for uarch {
     fn from(instr: And) -> Self {
         let mut word: uarch = 0;
-        word |= 0b0101 << 12;
-        word |= instr.op1 << 8;
+        word |= 0b0110 << 12;
+        word |= (instr.op1 << 8) & 0x0f00;
         word |= match instr.op2 {
             Op2::Op2(op2) => op2,
             Op2::Imm(imm) => 0x0080 | imm,
-        };
+        } & 0x00ff;
         word
     }
 }
@@ -66,5 +66,22 @@ impl Instruction for And {
         *proc.sr ^= (*proc.sr & 0x0002) ^ ((negative as uarch) << 1);
         *proc.sr ^= *proc.sr & 0x0004;
         *proc.sr ^= *proc.sr & 0x0008;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sweep() {
+        for mut word in 0x6000..=0x6fff {
+            let instr = And::from(word);
+            if let Op2::Op2(_) = instr.op2 {
+                word &= 0xff8f;
+            }
+            let decoded: uarch = instr.into();
+            assert_eq!(decoded, word);
+        }
     }
 }

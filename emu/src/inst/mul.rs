@@ -38,11 +38,11 @@ impl From<Mul> for uarch {
     fn from(instr: Mul) -> Self {
         let mut word: uarch = 0;
         word |= 0b0111 << 12;
-        word |= instr.op1 << 8;
+        word |= (instr.op1 << 8) & 0x0f00;
         word |= match instr.op2 {
             Op2::Op2(op2) => op2,
             Op2::Imm(imm) => 0x0080 | imm,
-        };
+        } & 0x00ff;
         word
     }
 }
@@ -57,7 +57,6 @@ impl Instruction for Mul {
         };
         // Compute result
         let (res, carryout) = op1.overflowing_mul(op2);
-        let res = res as uarch;
         let carryin = ((res ^ op1 ^ op2) & 0x8000) != 0;
         // Compute condition codes
         let zero = res == 0;
@@ -70,5 +69,22 @@ impl Instruction for Mul {
         *proc.sr ^= (*proc.sr & 0x0002) ^ ((negative as uarch) << 1);
         *proc.sr ^= (*proc.sr & 0x0004) ^ ((overflow as uarch) << 2);
         *proc.sr ^= (*proc.sr & 0x0008) ^ ((carry as uarch) << 3);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sweep() {
+        for mut word in 0x7000..=0x7fff {
+            let instr = Mul::from(word);
+            if let Op2::Op2(_) = instr.op2 {
+                word &= 0xff8f;
+            }
+            let decoded: uarch = instr.into();
+            assert_eq!(decoded, word);
+        }
     }
 }

@@ -51,12 +51,12 @@ impl From<Sub> for uarch {
     fn from(instr: Sub) -> Self {
         let mut word: uarch = 0;
         word |= 0b100 << 13;
-        word |= (instr.mode as uarch) << 12;
-        word |= instr.op1 << 8;
+        word |= ((instr.mode as uarch) << 12) & 0x1000;
+        word |= (instr.op1 << 8) & 0x0f00;
         word |= match instr.op2 {
             Op2::Op2(op2) => op2,
             Op2::Imm(imm) => 0x0080 | imm,
-        };
+        } & 0x00ff;
         word
     }
 }
@@ -87,5 +87,22 @@ impl Instruction for Sub {
         *proc.sr ^= (*proc.sr & 0x0002) ^ ((negative as uarch) << 1);
         *proc.sr ^= (*proc.sr & 0x0004) ^ ((overflow as uarch) << 2);
         *proc.sr ^= (*proc.sr & 0x0008) ^ ((carry as uarch) << 3);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sweep() {
+        for mut word in 0x8000..=0x9fff {
+            let instr = Sub::from(word);
+            if let Op2::Op2(_) = instr.op2 {
+                word &= 0xff8f;
+            }
+            let decoded: uarch = instr.into();
+            assert_eq!(decoded, word);
+        }
     }
 }

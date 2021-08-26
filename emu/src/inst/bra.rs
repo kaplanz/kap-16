@@ -69,12 +69,12 @@ impl From<Bra> for uarch {
     fn from(instr: Bra) -> Self {
         let mut word: uarch = 0;
         word |= 0b1111 << 12;
-        word |= (instr.link as uarch) << 11;
-        word |= (instr.cond as uarch) << 8;
+        word |= ((instr.link as uarch) << 11) & 0x0800;
+        word |= ((instr.cond as uarch) << 8) & 0x0700;
         word |= match instr.op2 {
             Op2::Op2(op2) => op2,
-            Op2::Imm(imm) => 0x0080 | imm,
-        };
+            Op2::Imm(imm) => 0x0080 | (imm / (WORDSIZE as uarch)),
+        } & 0x00ff;
         word
     }
 }
@@ -101,6 +101,27 @@ impl Instruction for Bra {
                 *proc.regs[14] = *proc.regs[15];
             }
             *proc.regs[15] = res;
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sweep() {
+        for mut word in 0xf000..=0xffff {
+            match (word & 0x0700) >> 8 {
+                0b111 => continue,
+                _ => (),
+            }
+            let instr = Bra::from(word);
+            if let Op2::Op2(_) = instr.op2 {
+                word &= 0xff8f;
+            }
+            let decoded: uarch = instr.into();
+            assert_eq!(decoded, word);
         }
     }
 }

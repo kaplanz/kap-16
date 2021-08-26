@@ -55,12 +55,11 @@ impl From<Mov> for uarch {
     fn from(instr: Mov) -> Self {
         let mut word: uarch = 0;
         word |= 0b1010 << 12;
-        word |= instr.op1 << 8;
-        word |= (instr.mode as uarch) << 4;
+        word |= (instr.op1 << 8) & 0x0f00;
         word |= match instr.op2 {
-            Op2::Op2(op2) => op2,
+            Op2::Op2(op2) => ((instr.mode as uarch) << 4) | op2,
             Op2::Imm(imm) => 0x0080 | imm,
-        };
+        } & 0x00ff;
         word
     }
 }
@@ -80,5 +79,26 @@ impl Instruction for Mov {
         } as uarch;
         // Set result
         *proc.regs[self.op1] = res;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sweep() {
+        for mut word in 0xa000..=0xafff {
+            match (word & 0x00b0) >> 4 {
+                0b0011 => continue,
+                _ => (),
+            }
+            let instr = Mov::from(word);
+            if let Op2::Op2(_) = instr.op2 {
+                word &= 0xffbf;
+            }
+            let decoded: uarch = instr.into();
+            assert_eq!(decoded, word);
+        }
     }
 }

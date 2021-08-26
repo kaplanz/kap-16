@@ -8,9 +8,9 @@ enum Mode {
     Lsr = 0b000,
     Asr = 0b001,
     Ror = 0b010,
-    Lsl = 0b011,
-    Asl = 0b100,
-    Rol = 0b101,
+    Lsl = 0b100,
+    Asl = 0b101,
+    Rol = 0b110,
 }
 
 #[derive(Debug)]
@@ -58,12 +58,12 @@ impl From<Shf> for uarch {
     fn from(instr: Shf) -> Self {
         let mut word: uarch = 0;
         word |= 0b1110 << 12;
-        word |= instr.op1 << 8;
-        word |= (instr.mode as uarch) << 4;
+        word |= (instr.op1 << 8) & 0x0f00;
+        word |= ((instr.mode as uarch) << 4) & 0x0070;
         word |= match instr.op2 {
             Op2::Op2(op2) => op2,
             Op2::Imm(imm) => 0x0080 | imm,
-        };
+        } & 0x00ff;
         word
     }
 }
@@ -102,5 +102,23 @@ impl Instruction for Shf {
         *proc.sr ^= (*proc.sr & 0x0002) ^ ((negative as uarch) << 1);
         *proc.sr ^= (*proc.sr & 0x0004) ^ ((overflow as uarch) << 2);
         *proc.sr ^= (*proc.sr & 0x0008) ^ ((carry as uarch) << 3);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sweep() {
+        for word in 0xe000..=0xefff {
+            match (word & 0x0030) >> 4 {
+                0b11 => continue,
+                _ => (),
+            }
+            let instr = Shf::from(word);
+            let decoded: uarch = instr.into();
+            assert_eq!(decoded, word);
+        }
     }
 }
