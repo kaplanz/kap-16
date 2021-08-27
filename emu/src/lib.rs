@@ -7,6 +7,8 @@ use std::io::{self, Read};
 use std::mem;
 use std::path::Path;
 
+use log::{debug, error, info, trace, warn};
+
 mod inst;
 mod proc;
 mod ram;
@@ -46,14 +48,14 @@ impl Emulator {
 
         // Error checking
         if read < buf.len() {
-            log::warn!(
+            warn!(
                 "Read {} bytes from {:?}; zero padded remaining {} bytes.",
                 read,
                 file,
                 buf.len() - read
             );
         } else if (buf.len() as u64) < f.metadata()?.len() {
-            log::error!(
+            error!(
                 "Read {} bytes from {:?}; truncated remaining {} bytes.",
                 read,
                 &file,
@@ -67,9 +69,9 @@ impl Emulator {
     pub fn main(&mut self) {
         loop {
             let instr = self.proc.cycle();
-            log::info!("{}", instr);
-            log::debug!("{}", self.proc);
-            log::trace!("{}", self.proc.ram);
+            info!("{}", instr);
+            debug!("{}", self.proc);
+            trace!("{}", self.proc.ram);
         }
     }
 }

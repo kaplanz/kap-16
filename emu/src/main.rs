@@ -24,15 +24,18 @@ fn main() {
 }
 
 /// Emulator for the KAP-16 processor.
-#[derive(Clap)]
+#[derive(Clap, Debug)]
 #[clap(author = crate_authors!())]
 #[clap(version = crate_version!())]
 struct Opt {
     /// Input ROM file
-    #[clap(parse(from_os_str), value_hint = ValueHint::FilePath)]
+    #[clap(parse(from_os_str))]
+    #[clap(value_hint = ValueHint::FilePath)]
     rom: PathBuf,
 
     /// Use verbose output (-v, -vv, -vvv, etc.)
-    #[clap(short, long, parse(from_occurrences))]
+    #[clap(short)]
+    #[clap(long)]
+    #[clap(parse(from_occurrences))]
     verbose: u8,
 }
