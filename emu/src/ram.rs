@@ -1,4 +1,4 @@
-use std::fmt::{self, Debug, Display};
+use std::fmt::{self, Display};
 use std::mem;
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 

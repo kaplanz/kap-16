@@ -1,4 +1,4 @@
-use std::fmt::{self, Debug, Display};
+use std::fmt::{self, Display};
 
 use super::{uarch, BANKSIZE, RAMSIZE, WORDSIZE};
 use crate::inst::{self, Instruction};
