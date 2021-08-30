@@ -27,10 +27,18 @@ fn main() {
         });
     }
     // Produce an assembled output
-    a.assemble();
+    a.assemble().unwrap_or_else(|err| {
+        error!("{}", err);
+        process::exit(2);
+    });
+    // Write output file
+    a.write(&opt.out).unwrap_or_else(|err| {
+        error!("`{}`: {}", &opt.out.display(), err);
+        process::exit(1);
+    });
 }
 
-/// Emulator for the KAP-16 processor.
+/// Assembler for the KAP-16 processor.
 #[derive(Clap, Debug)]
 #[clap(author = crate_authors!())]
 #[clap(version = crate_version!())]

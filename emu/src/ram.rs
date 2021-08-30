@@ -50,14 +50,16 @@ impl<const N: usize> Index<uarch> for Ram<N> {
     type Output = uarch;
 
     fn index(&self, idx: uarch) -> &Self::Output {
-        assert!((idx % 2) == 0);
-        unsafe { &self.0.align_to::<uarch>().1[idx as usize / WORDSIZE] }
+        let idx = idx as usize;
+        assert!((idx % WORDSIZE) == 0);
+        unsafe { &self.0.align_to::<uarch>().1[idx / WORDSIZE] }
     }
 }
 
 impl<const N: usize> IndexMut<uarch> for Ram<N> {
     fn index_mut(&mut self, idx: uarch) -> &mut Self::Output {
-        assert!((idx % 2) == 0);
-        unsafe { &mut self.0.align_to_mut::<uarch>().1[idx as usize / WORDSIZE] }
+        let idx = idx as usize;
+        assert!((idx % WORDSIZE) == 0);
+        unsafe { &mut self.0.align_to_mut::<uarch>().1[idx / WORDSIZE] }
     }
 }

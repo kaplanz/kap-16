@@ -1,7 +1,8 @@
 use std::fmt::{self, Display};
+use std::str::FromStr;
 
-use super::Op2;
-use crate::{uarch, util, WORDSIZE};
+use super::{Instruction, Op2, ParseInstructionError};
+use crate::{iarch, lex, uarch, util, WORDSIZE};
 
 #[derive(Debug)]
 enum Cond {
@@ -78,6 +79,43 @@ impl From<Bra> for uarch {
         word
     }
 }
+
+impl FromStr for Bra {
+    type Err = ParseInstructionError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Only operate on lowercase strings
+        // (also creates an owned String from &str)
+        let s = s.to_lowercase();
+        // Split into constituent tokens
+        let tokens = lex::split(s).ok_or(Self::Err {})?;
+        // Parse cond
+        let cond = match &*tokens[0] {
+            "b" | "bl" => Cond::Ra,
+            "beq" | "bleq" => Cond::Eq,
+            "bne" | "blne" => Cond::Ne,
+            "blt" | "bllt" => Cond::Lt,
+            "ble" | "blle" => Cond::Le,
+            "bge" | "blge" => Cond::Ge,
+            "bgt" | "blgt" => Cond::Gt,
+            _ => Err(Self::Err {})?,
+        };
+        // Parse link
+        let link = tokens[0].len() % 2 == 0;
+        // Parse op2
+        let op2 = tokens[1].parse()?;
+        // Ensure validity of ops
+        match op2 {
+            Op2::Op2(reg) if reg < 0x10 => Ok(()),
+            Op2::Imm(imm) if (imm as iarch) < 0x80 && (imm as usize % WORDSIZE == 0) => Ok(()),
+            _ => Err(Self::Err {}),
+        }?;
+        // Create Self from parts
+        Ok(Self { op2, link, cond })
+    }
+}
+
+impl Instruction for Bra {}
 
 #[cfg(test)]
 mod tests {

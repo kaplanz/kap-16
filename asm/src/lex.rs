@@ -3,14 +3,14 @@ use std::collections::HashMap;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-static COMMENT: &str = ";";
-static SYMDELIM: &str = ":";
+const COMMENT: &str = ";";
+const SYMDELIM: &str = ":";
 
 pub fn tokenize(lines: Vec<String>) -> Vec<Vec<String>> {
     lines.into_iter().filter_map(split).collect()
 }
 
-fn split(line: String) -> Option<Vec<String>> {
+pub fn split(line: String) -> Option<Vec<String>> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"\b").unwrap();
     }

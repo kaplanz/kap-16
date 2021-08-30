@@ -1,7 +1,8 @@
 use std::fmt::{self, Display};
+use std::str::FromStr;
 
-use super::Op2;
-use crate::uarch;
+use super::{Instruction, Op2, ParseInstructionError};
+use crate::{lex, uarch};
 
 #[derive(Clone, Copy, Debug)]
 enum Mode {
@@ -67,6 +68,48 @@ impl From<Shf> for uarch {
         word
     }
 }
+
+impl FromStr for Shf {
+    type Err = ParseInstructionError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Only operate on lowercase strings
+        // (also creates an owned String from &str)
+        let s = s.to_lowercase();
+        // Split into constituent tokens
+        let tokens = lex::split(s).ok_or(Self::Err {})?;
+        // Parse mode
+        let mode = match &*tokens[0] {
+            "lsr" => Mode::Lsr,
+            "asr" => Mode::Asr,
+            "ror" => Mode::Ror,
+            "lsl" => Mode::Lsl,
+            "asl" => Mode::Asl,
+            "rol" => Mode::Rol,
+            _ => Err(Self::Err {})?,
+        };
+        // Parse op1
+        let op1 = match tokens[1].split_at(1) {
+            ("r", reg) => Ok(reg.parse()?),
+            _ => Err(Self::Err {}),
+        }?;
+        // Look for "," separator
+        ("," == tokens[2]).then(|| ()).ok_or(Self::Err {})?;
+        // Parse op2
+        let op2 = tokens[3].parse()?;
+        // Ensure validity of ops
+        (op1 < 0x10).then(|| ()).ok_or(Self::Err {})?;
+        match op2 {
+            Op2::Op2(reg) if reg < 0x10 => Ok(()),
+            Op2::Imm(imm) if imm < 0x10 => Ok(()),
+            _ => Err(Self::Err {}),
+        }?;
+        // Create Self from parts
+        Ok(Self { op1, op2, mode })
+    }
+}
+
+impl Instruction for Shf {}
 
 #[cfg(test)]
 mod tests {

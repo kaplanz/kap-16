@@ -6,12 +6,13 @@
 
 _main:
     mov r0, 0d1  ; use r0, r1 to store the current...
-    mov r1, 0d1  ; ... and next numbers in the sequence
-    mov r2, 0d0  ; use r2 as a counter
+    mov r1, 0d0  ; ... and previous numbers in the sequence
+    mov r3, 0d15 ; use r3 as a counter
 loop:
-    add r0, r1   ; compute the r2th number
-    add r1, r0   ; computer the (r2 + 1)st number
-    add r2, 0b2
-    cmp r2, 0b7  ; check if we've reached 7...
-    blt loop     ; ... loop until we're done
-                 ; r0, r1 now store the 6th, 7th numbers
+    mov r2, r1   ; move previous number into r2
+    mov r1, r0   ; move current number into r1
+    add r0, r2   ; compute the next number
+    sub r3, 0d1  ; check if we've reached 20...
+    bne loop     ; ... loop until we're done
+end:
+    b   end      ; loop forever

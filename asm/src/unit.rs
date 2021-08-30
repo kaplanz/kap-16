@@ -1,9 +1,11 @@
 use std::collections::{HashMap, HashSet};
+use std::mem;
 use std::path::PathBuf;
 
 use log::error;
 
-use crate::lex;
+use crate::inst::ParseInstructionError;
+use crate::{iarch, inst, lex, uarch, WORDSIZE};
 
 #[derive(Clone, Debug)]
 pub struct Unit {
@@ -44,5 +46,24 @@ impl Unit {
         self.symbols.extend(other.symbols);
         // Return combined unit
         Some(self)
+    }
+
+    pub fn subst(&mut self) {
+        // Substitute symbols with addresses
+        let symbols = self.symbols.clone();
+        self.source.iter_mut().enumerate().for_each(|(idx, line)| {
+            line.iter_mut()
+                .skip(1)
+                .filter(|token| symbols.contains_key(*token))
+                .for_each(|token| {
+                    let delta = (symbols[token] as iarch) - (idx as iarch + 1);
+                    let delta = (WORDSIZE as iarch) * (delta as iarch);
+                    mem::swap(token, &mut format!("{:#x}", delta))
+                })
+        });
+    }
+
+    pub fn parse(&self) -> Result<Vec<uarch>, ParseInstructionError> {
+        self.source.iter().map(inst::parse).collect()
     }
 }

@@ -1,7 +1,8 @@
 use std::fmt::{self, Display};
+use std::str::FromStr;
 
-use super::Op2;
-use crate::{uarch, util};
+use super::{Instruction, Op2, ParseInstructionError};
+use crate::{lex, uarch, util};
 
 #[derive(Debug)]
 pub struct Mul {
@@ -9,9 +10,15 @@ pub struct Mul {
     op2: Op2,
 }
 
+impl Mul {
+    pub const fn ident() -> &'static str {
+        "mul"
+    }
+}
+
 impl Display for Mul {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let label = "mul";
+        let label = Self::ident();
         let op1 = format!("r{}", self.op1);
         let op2 = match self.op2 {
             Op2::Op2(op2) => format!("r{}", op2),
@@ -46,6 +53,42 @@ impl From<Mul> for uarch {
         word
     }
 }
+
+impl FromStr for Mul {
+    type Err = ParseInstructionError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Only operate on lowercase strings
+        // (also creates an owned String from &str)
+        let s = s.to_lowercase();
+        // Split into constituent tokens
+        let tokens = lex::split(s).ok_or(Self::Err {})?;
+        // Check instruction is correct
+        (Self::ident() == tokens[0])
+            .then(|| ())
+            .ok_or(Self::Err {})?;
+        // Parse op1
+        let op1 = match tokens[1].split_at(1) {
+            ("r", reg) => Ok(reg.parse()?),
+            _ => Err(Self::Err {}),
+        }?;
+        // Look for "," separator
+        ("," == tokens[2]).then(|| ()).ok_or(Self::Err {})?;
+        // Parse op2
+        let op2 = tokens[3].parse()?;
+        // Ensure validity of ops
+        (op1 < 0x10).then(|| ()).ok_or(Self::Err {})?;
+        match op2 {
+            Op2::Op2(reg) if reg < 0x10 => Ok(()),
+            Op2::Imm(imm) if imm < 0x80 => Ok(()),
+            _ => Err(Self::Err {}),
+        }?;
+        // Create Self from parts
+        Ok(Self { op1, op2 })
+    }
+}
+
+impl Instruction for Mul {}
 
 #[cfg(test)]
 mod tests {
