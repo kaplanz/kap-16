@@ -1,10 +1,10 @@
 use std::collections::{HashMap, HashSet};
+use std::error::Error;
 use std::mem;
 use std::path::PathBuf;
 
 use log::error;
 
-use crate::inst::ParseInstructionError;
 use crate::{iarch, inst, lex, uarch, WORDSIZE};
 
 #[derive(Clone, Debug)]
@@ -50,7 +50,7 @@ impl Unit {
 
     pub fn subst(&mut self) {
         // Substitute symbols with addresses
-        let symbols = self.symbols.clone();
+        let symbols = self.symbols.clone(); // FIXME
         self.source.iter_mut().enumerate().for_each(|(idx, line)| {
             line.iter_mut()
                 .skip(1)
@@ -63,7 +63,7 @@ impl Unit {
         });
     }
 
-    pub fn parse(&self) -> Result<Vec<uarch>, ParseInstructionError> {
+    pub fn parse(&self) -> Result<Vec<uarch>, Box<dyn Error>> {
         self.source.iter().map(inst::parse).collect()
     }
 }

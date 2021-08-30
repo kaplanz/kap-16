@@ -14,7 +14,7 @@ impl Display for Mul {
         let label = "mul";
         let op1 = format!("r{}", self.op1);
         let op2 = match self.op2 {
-            Op2::Op2(op2) => format!("r{}", op2),
+            Op2::Reg(op2) => format!("r{}", op2),
             Op2::Imm(imm) => format!("{:#06x}", imm),
         };
         write!(f, "{} {}, {}", label, op1, op2)
@@ -27,7 +27,7 @@ impl From<uarch> for Mul {
         Self {
             op1: (word & 0x0f00) >> 8,
             op2: match (word & 0x0080) == 0 {
-                true => Op2::Op2(word & 0x000f),
+                true => Op2::Reg(word & 0x000f),
                 false => Op2::Imm(util::sign_extend::<7, { uarch::BITS }>(word & 0x007f)),
             },
         }
@@ -40,7 +40,7 @@ impl From<Mul> for uarch {
         word |= 0b0111 << 12;
         word |= (instr.op1 << 8) & 0x0f00;
         word |= match instr.op2 {
-            Op2::Op2(op2) => op2,
+            Op2::Reg(op2) => op2,
             Op2::Imm(imm) => 0x0080 | imm,
         } & 0x00ff;
         word
@@ -52,7 +52,7 @@ impl Instruction for Mul {
         // Extract operands
         let op1 = *proc.regs[self.op1];
         let op2 = match self.op2 {
-            Op2::Op2(op2) => *proc.regs[op2],
+            Op2::Reg(op2) => *proc.regs[op2],
             Op2::Imm(imm) => imm,
         };
         // Compute result
@@ -80,7 +80,7 @@ mod tests {
     fn sweep() {
         for mut word in 0x7000..=0x7fff {
             let instr = Mul::from(word);
-            if let Op2::Op2(_) = instr.op2 {
+            if let Op2::Reg(_) = instr.op2 {
                 word &= 0xff8f;
             }
             let decoded: uarch = instr.into();

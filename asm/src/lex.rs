@@ -1,16 +1,42 @@
 use std::collections::HashMap;
+use std::error::Error;
+use std::fmt::{self, Display};
+use std::result;
 
 use lazy_static::lazy_static;
 use regex::Regex;
 
-const COMMENT: &str = ";";
-const SYMDELIM: &str = ":";
+use crate::uarch;
 
-pub fn tokenize(lines: Vec<String>) -> Vec<Vec<String>> {
-    lines.into_iter().filter_map(split).collect()
+const COMMENT: &str = ";";
+const SYMBOL: &str = ":";
+
+#[derive(Debug)]
+pub enum ParseLexemeError {
+    EmptyToken,
+    InvalidReg(String),
+    InvalidImm(String),
 }
 
-pub fn split(line: String) -> Option<Vec<String>> {
+impl Display for ParseLexemeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::EmptyToken => "Found empty token; expected content".to_string(),
+                Self::InvalidReg(token) => format!("Could not parse register from `{}`", token),
+                Self::InvalidImm(token) => format!("Could not parse immediate from `{}`", token),
+            }
+        )
+    }
+}
+
+impl Error for ParseLexemeError {}
+
+type Result<T> = result::Result<T, ParseLexemeError>;
+
+pub fn tokenize(line: String) -> Option<Vec<String>> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"\b").unwrap();
     }
@@ -32,16 +58,53 @@ pub fn extract(source: &mut Vec<Vec<String>>) -> HashMap<String, usize> {
     let mut symbols = HashMap::new();
     source.retain(|line| {
         // Check if we have a symbol
-        let is_symbol = line.len() == 2 && line[1] == SYMDELIM;
+        let is_symbol = line.len() == 2 && is_word(&line[0]) && &line[1] == SYMBOL;
         if is_symbol {
             // Move the symbol, keeping track of the index
             symbols.insert(line[0].to_string(), idx);
+            false // remove symbol
         } else {
             idx += 1;
+            true // retain line
         }
-        // Retain lines that aren't symbols
-        !is_symbol
     });
     // Return extracted symbols
     symbols
+}
+
+pub fn parse_reg(token: &str) -> Result<uarch> {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"^r(\d+)$").unwrap();
+    }
+    (|| match token {
+        "sr" => Some(13),
+        "lr" => Some(14),
+        "pc" => Some(15),
+        token => uarch::from_str_radix(&RE.captures(token)?.get(1)?.as_str(), 10).ok(),
+    })()
+    .ok_or(ParseLexemeError::InvalidReg(token.to_string()))
+}
+
+pub fn parse_imm(token: &str) -> Result<uarch> {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"^0(b|d|o|x)([[:xdigit:]]+)$").unwrap();
+    }
+    (|| {
+        let captures = RE.captures(token)?;
+        match captures.get(1)?.as_str() {
+            "b" => uarch::from_str_radix(captures.get(2)?.as_str(), 2).ok(),
+            "d" => uarch::from_str_radix(captures.get(2)?.as_str(), 10).ok(),
+            "o" => uarch::from_str_radix(captures.get(2)?.as_str(), 8).ok(),
+            "x" => uarch::from_str_radix(captures.get(2)?.as_str(), 16).ok(),
+            _ => None,
+        }
+    })()
+    .ok_or(ParseLexemeError::InvalidImm(token.to_string()))
+}
+
+fn is_word(token: &str) -> bool {
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"^\w+$").unwrap();
+    }
+    RE.is_match(token)
 }

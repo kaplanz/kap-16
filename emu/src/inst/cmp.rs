@@ -23,7 +23,7 @@ impl Display for Cmp {
         let label = format!("{:?}", self.mode).to_lowercase();
         let op1 = format!("r{}", self.op1);
         let op2 = match self.op2 {
-            Op2::Op2(op2) => format!("r{}", op2),
+            Op2::Reg(op2) => format!("r{}", op2),
             Op2::Imm(imm) => format!("{:#06x}", imm),
         };
         write!(f, "{} {}, {}", label, op1, op2)
@@ -36,7 +36,7 @@ impl From<uarch> for Cmp {
         Self {
             op1: (word & 0x0f00) >> 8,
             op2: match (word & 0x0080) == 0 {
-                true => Op2::Op2(word & 0x000f),
+                true => Op2::Reg(word & 0x000f),
                 false => Op2::Imm(util::sign_extend::<7, { uarch::BITS }>(word & 0x007f)),
             },
             mode: match (word & 0x3000) >> 12 {
@@ -57,7 +57,7 @@ impl From<Cmp> for uarch {
         word |= ((instr.mode as uarch) << 12) & 0x3000;
         word |= (instr.op1 << 8) & 0x0f00;
         word |= match instr.op2 {
-            Op2::Op2(op2) => op2,
+            Op2::Reg(op2) => op2,
             Op2::Imm(imm) => 0x0080 | imm,
         } & 0x00ff;
         word
@@ -69,7 +69,7 @@ impl Instruction for Cmp {
         // Extract operands
         let op1 = *proc.regs[self.op1];
         let op2 = match self.op2 {
-            Op2::Op2(op2) => *proc.regs[op2],
+            Op2::Reg(op2) => *proc.regs[op2],
             Op2::Imm(imm) => imm,
         };
         // Compute result
@@ -107,7 +107,7 @@ mod tests {
     fn sweep() {
         for mut word in 0x0000..=0x3fff {
             let instr = Cmp::from(word);
-            if let Op2::Op2(_) = instr.op2 {
+            if let Op2::Reg(_) = instr.op2 {
                 word &= 0xff8f;
             }
             let decoded: uarch = instr.into();

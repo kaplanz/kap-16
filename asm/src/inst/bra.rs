@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+use std::error::Error;
 use std::fmt::{self, Display};
 use std::str::FromStr;
 
@@ -34,7 +36,7 @@ impl Display for Bra {
         )
         .to_lowercase();
         let op2 = match self.op2 {
-            Op2::Op2(op2) => format!("r{}", op2),
+            Op2::Reg(op2) => format!("r{}", op2),
             Op2::Imm(imm) => format!("{:+#07x}", imm),
         };
         write!(f, "{} {}", label, op2)
@@ -46,7 +48,7 @@ impl From<uarch> for Bra {
         assert_eq!((word >> 12), 0b1111);
         Self {
             op2: match (word & 0x0080) == 0 {
-                true => Op2::Op2(word & 0x000f),
+                true => Op2::Reg(word & 0x000f),
                 false => Op2::Imm(util::sign_extend::<8, { uarch::BITS }>(
                     (WORDSIZE as uarch) * (word & 0x007f),
                 )),
@@ -73,7 +75,7 @@ impl From<Bra> for uarch {
         word |= ((instr.link as uarch) << 11) & 0x0800;
         word |= ((instr.cond as uarch) << 8) & 0x0700;
         word |= match instr.op2 {
-            Op2::Op2(op2) => op2,
+            Op2::Reg(op2) => op2,
             Op2::Imm(imm) => 0x0080 | (imm / (WORDSIZE as uarch)),
         } & 0x00ff;
         word
@@ -81,14 +83,20 @@ impl From<Bra> for uarch {
 }
 
 impl FromStr for Bra {
-    type Err = ParseInstructionError;
+    type Err = Box<dyn Error>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Only operate on lowercase strings
         // (also creates an owned String from &str)
         let s = s.to_lowercase();
         // Split into constituent tokens
-        let tokens = lex::split(s).ok_or(Self::Err {})?;
+        let tokens = lex::tokenize(s).ok_or(ParseInstructionError::EmptyStr)?;
+        // Ensure correct number of tokens
+        match tokens.len().cmp(&2) {
+            Ordering::Less => Err(ParseInstructionError::MissingOps),
+            Ordering::Equal => Ok(()),
+            Ordering::Greater => Err(ParseInstructionError::ExtraOps),
+        }?;
         // Parse cond
         let cond = match &*tokens[0] {
             "b" | "bl" => Cond::Ra,
@@ -98,7 +106,7 @@ impl FromStr for Bra {
             "ble" | "blle" => Cond::Le,
             "bge" | "blge" => Cond::Ge,
             "bgt" | "blgt" => Cond::Gt,
-            _ => Err(Self::Err {})?,
+            _ => Err(ParseInstructionError::BadInstruction)?,
         };
         // Parse link
         let link = tokens[0].len() % 2 == 0;
@@ -106,9 +114,9 @@ impl FromStr for Bra {
         let op2 = tokens[1].parse()?;
         // Ensure validity of ops
         match op2 {
-            Op2::Op2(reg) if reg < 0x10 => Ok(()),
+            Op2::Reg(reg) if reg < 0x10 => Ok(()),
             Op2::Imm(imm) if (imm as iarch) < 0x80 && (imm as usize % WORDSIZE == 0) => Ok(()),
-            _ => Err(Self::Err {}),
+            _ => Err(ParseInstructionError::InvalidOp),
         }?;
         // Create Self from parts
         Ok(Self { op2, link, cond })
@@ -129,7 +137,7 @@ mod tests {
                 _ => (),
             }
             let instr = Bra::from(word);
-            if let Op2::Op2(_) = instr.op2 {
+            if let Op2::Reg(_) = instr.op2 {
                 word &= 0xff8f;
             }
             let decoded: uarch = instr.into();

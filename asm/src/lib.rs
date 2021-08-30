@@ -2,12 +2,13 @@
 //!
 //! `asm` is an assembler for the KAP-16 microprocessor.
 
+use std::error::Error;
+use std::fmt::Display;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
 use std::{mem, process};
 
-use inst::ParseInstructionError;
 use log::error;
 
 mod inst;
@@ -24,18 +25,6 @@ type uarch = u16;
 
 const WORDSIZE: usize = mem::size_of::<uarch>();
 
-#[derive(Debug)]
-enum State {
-    Units(Vec<Unit>),
-    Words(Vec<uarch>),
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self::Units(Default::default())
-    }
-}
-
 #[derive(Debug, Default)]
 pub struct Assembler {
     state: State,
@@ -48,26 +37,26 @@ impl Assembler {
         }
     }
 
-    pub fn source(&mut self, src: &Path) -> io::Result<()> {
+    pub fn source(&mut self, src: &Path) -> Result<(), Box<dyn Error>> {
         if let State::Units(units) = &mut self.state {
             // Read the input file
             let f = File::open(src)?;
             let lines: Vec<String> = BufReader::new(f).lines().collect::<Result<_, _>>()?;
             // Tokenize lines
-            let lines = lex::tokenize(lines);
+            let tokens: Vec<Vec<String>> = lines.into_iter().filter_map(lex::tokenize).collect();
             // Perform preprocessing
             // TODO
             // Ensure no duplicate symbols
             // TODO
             // Create translation unit
-            units.push(Unit::new(src.to_path_buf(), lines));
+            units.push(Unit::new(src.to_path_buf(), tokens));
         } else {
             panic!("Invalid state!");
         }
         Ok(())
     }
 
-    pub fn assemble(&mut self) -> Result<(), ParseInstructionError> {
+    pub fn assemble(&mut self) -> Result<(), Box<dyn Error>> {
         if let State::Units(units) = &self.state {
             // Concatenate translation units
             let mut unit = units
@@ -105,6 +94,32 @@ impl Assembler {
         }
     }
 }
+
+#[derive(Debug)]
+enum State {
+    Units(Vec<Unit>),
+    Words(Vec<uarch>),
+}
+
+impl Default for State {
+    fn default() -> Self {
+        Self::Units(Default::default())
+    }
+}
+
+#[derive(Debug)]
+pub struct AssemblerError {
+    error: Box<dyn Error>,
+    loc: (&'static Path, usize),
+}
+
+impl Display for AssemblerError {
+    fn fmt(&self, _f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        todo!()
+    }
+}
+
+impl Error for AssemblerError {}
 
 #[cfg(test)]
 mod tests {}

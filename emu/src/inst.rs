@@ -37,7 +37,7 @@ where
 
 #[derive(Debug)]
 enum Op2 {
-    Op2(uarch),
+    Reg(uarch),
     Imm(uarch),
 }
 

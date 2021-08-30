@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+use std::error::Error;
 use std::fmt::{self, Display};
 use std::str::FromStr;
 
@@ -26,7 +28,7 @@ impl Display for Shf {
         let label = format!("{:?}", self.mode).to_lowercase();
         let op1 = format!("r{}", self.op1);
         let op2 = match self.op2 {
-            Op2::Op2(op2) => format!("r{}", op2),
+            Op2::Reg(op2) => format!("r{}", op2),
             Op2::Imm(imm) => format!("{:#06x}", imm),
         };
         write!(f, "{} {}, {}", label, op1, op2)
@@ -39,7 +41,7 @@ impl From<uarch> for Shf {
         Self {
             op1: (word & 0x0f00) >> 8,
             op2: match (word & 0x0080) == 0 {
-                true => Op2::Op2(word & 0x000f),
+                true => Op2::Reg(word & 0x000f),
                 false => Op2::Imm(word & 0x000f),
             },
             mode: match (word & 0x0070) >> 4 {
@@ -62,7 +64,7 @@ impl From<Shf> for uarch {
         word |= (instr.op1 << 8) & 0x0f00;
         word |= ((instr.mode as uarch) << 4) & 0x0070;
         word |= match instr.op2 {
-            Op2::Op2(op2) => op2,
+            Op2::Reg(op2) => op2,
             Op2::Imm(imm) => 0x0080 | imm,
         } & 0x00ff;
         word
@@ -70,14 +72,20 @@ impl From<Shf> for uarch {
 }
 
 impl FromStr for Shf {
-    type Err = ParseInstructionError;
+    type Err = Box<dyn Error>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Only operate on lowercase strings
         // (also creates an owned String from &str)
         let s = s.to_lowercase();
         // Split into constituent tokens
-        let tokens = lex::split(s).ok_or(Self::Err {})?;
+        let tokens = lex::tokenize(s).ok_or(ParseInstructionError::EmptyStr)?;
+        // Ensure correct number of tokens
+        match tokens.len().cmp(&4) {
+            Ordering::Less => Err(ParseInstructionError::MissingOps),
+            Ordering::Equal => Ok(()),
+            Ordering::Greater => Err(ParseInstructionError::ExtraOps),
+        }?;
         // Parse mode
         let mode = match &*tokens[0] {
             "lsr" => Mode::Lsr,
@@ -86,23 +94,24 @@ impl FromStr for Shf {
             "lsl" => Mode::Lsl,
             "asl" => Mode::Asl,
             "rol" => Mode::Rol,
-            _ => Err(Self::Err {})?,
+            _ => Err(ParseInstructionError::BadInstruction)?,
         };
         // Parse op1
-        let op1 = match tokens[1].split_at(1) {
-            ("r", reg) => Ok(reg.parse()?),
-            _ => Err(Self::Err {}),
-        }?;
+        let op1 = lex::parse_reg(&tokens[1])?;
         // Look for "," separator
-        ("," == tokens[2]).then(|| ()).ok_or(Self::Err {})?;
+        (tokens[2] == ",")
+            .then(|| ())
+            .ok_or(ParseInstructionError::ExpectedSep)?;
         // Parse op2
         let op2 = tokens[3].parse()?;
         // Ensure validity of ops
-        (op1 < 0x10).then(|| ()).ok_or(Self::Err {})?;
+        (op1 < 0x10)
+            .then(|| ())
+            .ok_or(ParseInstructionError::InvalidOp)?;
         match op2 {
-            Op2::Op2(reg) if reg < 0x10 => Ok(()),
+            Op2::Reg(reg) if reg < 0x10 => Ok(()),
             Op2::Imm(imm) if imm < 0x10 => Ok(()),
-            _ => Err(Self::Err {}),
+            _ => Err(ParseInstructionError::InvalidOp),
         }?;
         // Create Self from parts
         Ok(Self { op1, op2, mode })

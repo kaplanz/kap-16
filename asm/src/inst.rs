@@ -1,9 +1,10 @@
+use std::error::Error;
+use std::fmt;
 use std::fmt::{Debug, Display};
-use std::num::ParseIntError;
 use std::str::FromStr;
-use std::{error, fmt};
 
-use crate::uarch;
+use crate::lex::ParseLexemeError;
+use crate::{lex, uarch};
 
 mod add;
 mod and;
@@ -34,66 +35,68 @@ use self::xor::Xor;
 trait Instruction: Debug + Display + FromStr {}
 
 #[derive(Clone, Debug)]
-pub struct ParseInstructionError;
+pub enum ParseInstructionError {
+    EmptyStr,
+    MissingOps,
+    ExtraOps,
+    BadInstruction,
+    ExpectedSep,
+    InvalidOp,
+}
 
-impl fmt::Display for ParseInstructionError {
+impl Display for ParseInstructionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "could not parse instruction")
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::EmptyStr => "Could not parse instruction from empty string",
+                Self::MissingOps => "Missing operands",
+                Self::ExtraOps => "Extra operands",
+                Self::BadInstruction => "Bad instruction name",
+                Self::ExpectedSep => "Expected separator between operands",
+                Self::InvalidOp => "Invalid operand",
+            }
+        )
     }
 }
 
-impl error::Error for ParseInstructionError {}
-
-impl From<ParseIntError> for ParseInstructionError {
-    fn from(_err: ParseIntError) -> Self {
-        ParseInstructionError {}
-    }
-}
+impl Error for ParseInstructionError {}
 
 #[derive(Debug)]
 enum Op2 {
-    Op2(uarch),
+    Reg(uarch),
     Imm(uarch),
 }
 
 impl FromStr for Op2 {
-    type Err = ParseInstructionError;
+    type Err = ParseLexemeError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.split_at(1) {
-            ("r", reg) => Ok(Op2::Op2(reg.parse()?)),
-            ("0", imm) => Ok(Op2::Imm(match imm.split_at(1) {
-                ("b", i) => uarch::from_str_radix(i, 2),
-                ("d", i) => uarch::from_str_radix(i, 10),
-                ("o", i) => uarch::from_str_radix(i, 8),
-                ("x", i) => uarch::from_str_radix(i, 16),
-                _ => return Err(ParseInstructionError {}),
-            }?)),
-            _ => Err(ParseInstructionError {}),
-        }
+        Ok(
+            match s.chars().next().ok_or(ParseLexemeError::EmptyToken)? {
+                '0' => Op2::Imm(lex::parse_imm(s)?),
+                _ => Op2::Reg(lex::parse_reg(s)?),
+            },
+        )
     }
 }
 
-pub fn parse(line: &Vec<String>) -> Result<uarch, ParseInstructionError> {
-    const ADD: &str = Add::ident();
-    const AND: &str = And::ident();
-    const MUL: &str = Mul::ident();
-    const ORR: &str = Orr::ident();
-    const XOR: &str = Xor::ident();
+pub fn parse(line: &Vec<String>) -> Result<uarch, Box<dyn Error>> {
     match &*line[0] {
-        ADD => Ok(line.join(" ").parse::<Add>()?.into()),
-        AND => Ok(line.join(" ").parse::<And>()?.into()),
+        "add" => Ok(line.join(" ").parse::<Add>()?.into()),
+        "and" => Ok(line.join(" ").parse::<And>()?.into()),
         "b" | "bl" | "beq" | "bleq" | "bne" | "blne" | "blt" | "bllt" | "ble" | "blle" | "bge"
         | "blge" | "bgt" | "blgt" => Ok(line.join(" ").parse::<Bra>()?.into()),
         "cmp" | "cmn" | "tst" | "teq" => Ok(line.join(" ").parse::<Cmp>()?.into()),
         "ldr" | "pop" => Ok(line.join(" ").parse::<Ldr>()?.into()),
         "mov" | "neg" | "not" => Ok(line.join(" ").parse::<Mov>()?.into()),
-        MUL => Ok(line.join(" ").parse::<Mul>()?.into()),
-        ORR => Ok(line.join(" ").parse::<Orr>()?.into()),
+        "mul" => Ok(line.join(" ").parse::<Mul>()?.into()),
+        "orr" => Ok(line.join(" ").parse::<Orr>()?.into()),
         "lsr" | "asr" | "ror" | "lsl" | "asl" | "rol" => Ok(line.join(" ").parse::<Shf>()?.into()),
         "str" | "push" => Ok(line.join(" ").parse::<Str>()?.into()),
         "sub" | "rsb" => Ok(line.join(" ").parse::<Sub>()?.into()),
-        XOR => Ok(line.join(" ").parse::<Xor>()?.into()),
+        "xor" => Ok(line.join(" ").parse::<Xor>()?.into()),
         _ => panic!("Could not parse: {:?}", line),
     }
 }

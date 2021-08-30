@@ -20,7 +20,7 @@ impl Display for Ldr {
             let label = "ldr";
             let op1 = format!("r{}", self.op1);
             let op2 = match self.op2 {
-                Op2::Op2(op2) => format!("r{}", op2),
+                Op2::Reg(op2) => format!("r{}", op2),
                 Op2::Imm(imm) => format!("{:+#07x}", imm),
             };
             write!(f, "{} {}, *{}", label, op1, op2)
@@ -34,7 +34,7 @@ impl From<uarch> for Ldr {
         Self {
             op1: (word & 0x0f00) >> 8,
             op2: match (word & 0x0080) == 0 {
-                true => Op2::Op2(word & 0x000f),
+                true => Op2::Reg(word & 0x000f),
                 false => Op2::Imm(util::sign_extend::<8, { uarch::BITS }>(
                     (WORDSIZE as uarch) * (word & 0x007f),
                 )),
@@ -50,7 +50,7 @@ impl From<Ldr> for uarch {
         word |= 0b1011 << 12;
         word |= (instr.op1 << 8) & 0x0f00;
         word |= match instr.op2 {
-            Op2::Op2(op2) => match instr.pop {
+            Op2::Reg(op2) => match instr.pop {
                 false => op2,
                 true => 0x0040,
             },
@@ -64,7 +64,7 @@ impl Instruction for Ldr {
     fn execute(&self, proc: &mut Processor) {
         // Compute result
         let res = match self.op2 {
-            Op2::Op2(op2) => match self.pop {
+            Op2::Reg(op2) => match self.pop {
                 false => *proc.regs[op2],
                 true => *proc.regs[13],
             },
@@ -87,7 +87,7 @@ mod tests {
     fn sweep() {
         for mut word in 0xb000..=0xbfff {
             let instr = Ldr::from(word);
-            if let Op2::Op2(_) = instr.op2 {
+            if let Op2::Reg(_) = instr.op2 {
                 word &= 0xffcf;
             }
             if instr.pop {

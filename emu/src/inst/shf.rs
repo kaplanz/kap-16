@@ -25,7 +25,7 @@ impl Display for Shf {
         let label = format!("{:?}", self.mode).to_lowercase();
         let op1 = format!("r{}", self.op1);
         let op2 = match self.op2 {
-            Op2::Op2(op2) => format!("r{}", op2),
+            Op2::Reg(op2) => format!("r{}", op2),
             Op2::Imm(imm) => format!("{:#06x}", imm),
         };
         write!(f, "{} {}, {}", label, op1, op2)
@@ -38,7 +38,7 @@ impl From<uarch> for Shf {
         Self {
             op1: (word & 0x0f00) >> 8,
             op2: match (word & 0x0080) == 0 {
-                true => Op2::Op2(word & 0x000f),
+                true => Op2::Reg(word & 0x000f),
                 false => Op2::Imm(word & 0x000f),
             },
             mode: match (word & 0x0070) >> 4 {
@@ -61,7 +61,7 @@ impl From<Shf> for uarch {
         word |= (instr.op1 << 8) & 0x0f00;
         word |= ((instr.mode as uarch) << 4) & 0x0070;
         word |= match instr.op2 {
-            Op2::Op2(op2) => op2,
+            Op2::Reg(op2) => op2,
             Op2::Imm(imm) => 0x0080 | imm,
         } & 0x00ff;
         word
@@ -73,7 +73,7 @@ impl Instruction for Shf {
         // Extract operands
         let op1 = *proc.regs[self.op1];
         let op2 = match self.op2 {
-            Op2::Op2(op2) => *proc.regs[op2],
+            Op2::Reg(op2) => *proc.regs[op2],
             Op2::Imm(imm) => imm,
         };
         // Compute result

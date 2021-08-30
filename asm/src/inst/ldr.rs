@@ -1,8 +1,10 @@
+use std::cmp::Ordering;
+use std::error::Error;
 use std::fmt::{self, Display};
 use std::str::FromStr;
 
 use super::{Instruction, Op2, ParseInstructionError};
-use crate::{lex, uarch, util, WORDSIZE};
+use crate::{iarch, lex, uarch, util, WORDSIZE};
 
 #[derive(Debug)]
 enum Mode {
@@ -24,7 +26,7 @@ impl Display for Ldr {
             Mode::Ldr => {
                 let op1 = format!("r{}", self.op1);
                 let op2 = match self.op2 {
-                    Op2::Op2(op2) => format!("r{}", op2),
+                    Op2::Reg(op2) => format!("r{}", op2),
                     Op2::Imm(imm) => format!("{:+#07x}", imm),
                 };
                 write!(f, "{} {}, *{}", label, op1, op2)
@@ -43,7 +45,7 @@ impl From<uarch> for Ldr {
         Self {
             op1: (word & 0x0f00) >> 8,
             op2: match (word & 0x0080) == 0 {
-                true => Op2::Op2(word & 0x000f),
+                true => Op2::Reg(word & 0x000f),
                 false => Op2::Imm(util::sign_extend::<8, { uarch::BITS }>(
                     (WORDSIZE as uarch) * (word & 0x007f),
                 )),
@@ -62,7 +64,7 @@ impl From<Ldr> for uarch {
         word |= 0b1011 << 12;
         word |= (instr.op1 << 8) & 0x0f00;
         word |= match instr.op2 {
-            Op2::Op2(op2) => match instr.mode {
+            Op2::Reg(op2) => match instr.mode {
                 Mode::Ldr => op2,
                 Mode::Pop => 0x0040,
             },
@@ -73,43 +75,60 @@ impl From<Ldr> for uarch {
 }
 
 impl FromStr for Ldr {
-    type Err = ParseInstructionError;
+    type Err = Box<dyn Error>;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Only operate on lowercase strings
         // (also creates an owned String from &str)
         let s = s.to_lowercase();
         // Split into constituent tokens
-        let tokens = lex::split(s).ok_or(Self::Err {})?;
+        let tokens = lex::tokenize(s).ok_or(ParseInstructionError::EmptyStr)?;
+        // Ensure at least one token
+        (tokens.len() > 0)
+            .then(|| ())
+            .ok_or(ParseInstructionError::MissingOps)?;
         // Parse mode
         let mode = match &*tokens[0] {
             "ldr" => Mode::Ldr,
             "pop" => Mode::Pop,
-            _ => Err(Self::Err {})?,
+            _ => Err(ParseInstructionError::BadInstruction)?,
         };
-        // Parse op1
-        let op1 = match tokens[1].split_at(1) {
-            ("r", reg) => Ok(reg.parse()?),
-            _ => Err(Self::Err {}),
+        let ntokens = match mode {
+            Mode::Ldr => 4,
+            Mode::Pop => 2,
+        };
+        // Ensure correct number of tokens
+        match tokens.len().cmp(&ntokens) {
+            Ordering::Less => Err(ParseInstructionError::MissingOps),
+            Ordering::Equal => Ok(()),
+            Ordering::Greater => Err(ParseInstructionError::ExtraOps),
         }?;
+        // Parse op1
+        let op1 = lex::parse_reg(&tokens[1])?;
         // Ensure validity of op1
-        (op1 < 0x10).then(|| ()).ok_or(Self::Err {})?;
+        (op1 < 0x10)
+            .then(|| ())
+            .ok_or(ParseInstructionError::InvalidOp)?;
         // Parse for Mode::Ldr
         let op2 = match mode {
             Mode::Ldr => {
                 // Look for "," separator
-                ("," == tokens[2]).then(|| ()).ok_or(Self::Err {})?;
+                (tokens[2] == ",")
+                    .then(|| ())
+                    .ok_or(ParseInstructionError::ExpectedSep)?;
                 // Parse op2
                 let op2 = tokens[3].parse()?;
                 // Ensure validity of op2
                 match op2 {
-                    Op2::Op2(reg) if reg < 0x10 => Ok(()),
-                    Op2::Imm(imm) if imm < 0x80 => Ok(()),
-                    _ => Err(Self::Err {}),
+                    Op2::Reg(reg) if reg < 0x10 => Ok(()),
+                    Op2::Imm(imm) if (imm as iarch) < 0x80 && (imm as usize % WORDSIZE == 0) => {
+                        Ok(())
+                    }
+                    _ => Err(ParseInstructionError::InvalidOp),
                 }?;
                 op2
             }
-            Mode::Pop => Op2::Op2(Default::default()),
+            Mode::Pop => Op2::Reg(Default::default()),
         };
         // Create Self from parts
         Ok(Self { op1, op2, mode })
@@ -126,7 +145,7 @@ mod tests {
     fn sweep() {
         for mut word in 0xb000..=0xbfff {
             let instr = Ldr::from(word);
-            if let Op2::Op2(_) = instr.op2 {
+            if let Op2::Reg(_) = instr.op2 {
                 word &= 0xffcf;
             }
             if let Mode::Pop = instr.mode {

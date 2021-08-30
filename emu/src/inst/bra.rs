@@ -33,7 +33,7 @@ impl Display for Bra {
         )
         .to_lowercase();
         let op2 = match self.op2 {
-            Op2::Op2(op2) => format!("r{}", op2),
+            Op2::Reg(op2) => format!("r{}", op2),
             Op2::Imm(imm) => format!("{:+#07x}", imm),
         };
         write!(f, "{} {}", label, op2)
@@ -45,7 +45,7 @@ impl From<uarch> for Bra {
         assert_eq!((word >> 12), 0b1111);
         Self {
             op2: match (word & 0x0080) == 0 {
-                true => Op2::Op2(word & 0x000f),
+                true => Op2::Reg(word & 0x000f),
                 false => Op2::Imm(util::sign_extend::<8, { uarch::BITS }>(
                     (WORDSIZE as uarch) * (word & 0x007f),
                 )),
@@ -72,7 +72,7 @@ impl From<Bra> for uarch {
         word |= ((instr.link as uarch) << 11) & 0x0800;
         word |= ((instr.cond as uarch) << 8) & 0x0700;
         word |= match instr.op2 {
-            Op2::Op2(op2) => op2,
+            Op2::Reg(op2) => op2,
             Op2::Imm(imm) => 0x0080 | (imm / (WORDSIZE as uarch)),
         } & 0x00ff;
         word
@@ -83,7 +83,7 @@ impl Instruction for Bra {
     fn execute(&self, proc: &mut Processor) {
         // Compute results
         let res = match self.op2 {
-            Op2::Op2(op2) => *proc.regs[op2],
+            Op2::Reg(op2) => *proc.regs[op2],
             Op2::Imm(imm) => (*proc.regs[15] as iarch + imm as iarch) as uarch,
         };
         let act = match self.cond {
@@ -117,7 +117,7 @@ mod tests {
                 _ => (),
             }
             let instr = Bra::from(word);
-            if let Op2::Op2(_) = instr.op2 {
+            if let Op2::Reg(_) = instr.op2 {
                 word &= 0xff8f;
             }
             let decoded: uarch = instr.into();
