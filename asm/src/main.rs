@@ -28,7 +28,7 @@ fn main() {
     }
     // Produce an assembled output
     a.assemble().unwrap_or_else(|err| {
-        error!("{}", err);
+        eprintln!("{}", err);
         process::exit(2);
     });
     // Write output file

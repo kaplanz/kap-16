@@ -9,6 +9,7 @@ use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::{mem, process};
 
+use colored::Colorize;
 use log::error;
 
 mod inst;
@@ -58,7 +59,7 @@ impl Assembler {
             .units
             .clone()
             .into_iter()
-            .reduce(|a, b| a.concat(b).unwrap_or_else(|| process::exit(1)))
+            .reduce(|a, b| a.concat(b).unwrap_or_else(|| process::exit(1))) // XXX
             .unwrap_or_else(|| {
                 error!("No sources to assemble!");
                 process::exit(1);
@@ -92,7 +93,25 @@ pub struct AssemblerError {
 
 impl Display for AssemblerError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}:{}: {}", self.loc.0.display(), self.loc.1, self.err)
+        let lineno = format!("{}", self.loc.1);
+        writeln!(
+            f,
+            "{}{} {}",
+            "error".red().bold(),
+            ":".bold(),
+            format!("{}", self.err).bold(),
+        )?;
+        writeln!(
+            f,
+            "{}{} {}:{}",
+            " ".repeat(lineno.len()),
+            "-->".blue().bold(),
+            self.loc.0.display(),
+            self.loc.1,
+        )?;
+        writeln!(f, "{} {}", " ".repeat(lineno.len()), "|".blue().bold())?;
+        writeln!(f, "{} {}", format!("{} |", lineno).blue().bold(), self.line)?;
+        write!(f, "{} {}", " ".repeat(lineno.len()), "|".blue().bold())
     }
 }
 

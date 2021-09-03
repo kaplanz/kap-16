@@ -42,6 +42,7 @@ pub enum ParseInstructionError {
     BadInstruction,
     ExpectedSep,
     InvalidOp,
+    UnknownInstruction,
 }
 
 impl Display for ParseInstructionError {
@@ -56,6 +57,7 @@ impl Display for ParseInstructionError {
                 Self::BadInstruction => "Bad instruction name",
                 Self::ExpectedSep => "Expected separator between operands",
                 Self::InvalidOp => "Invalid operand",
+                Self::UnknownInstruction => "Unknown instruction",
             }
         )
     }
@@ -83,20 +85,20 @@ impl FromStr for Op2 {
 }
 
 pub fn assemble(line: &Vec<String>) -> Result<uarch, Box<dyn Error>> {
-    match &*line[0] {
-        "add" => Ok(line.join(" ").parse::<Add>()?.into()),
-        "and" => Ok(line.join(" ").parse::<And>()?.into()),
+    Ok(match &*line[0] {
+        "add" => line.join(" ").parse::<Add>()?.into(),
+        "and" => line.join(" ").parse::<And>()?.into(),
         "b" | "bl" | "beq" | "bleq" | "bne" | "blne" | "blt" | "bllt" | "ble" | "blle" | "bge"
-        | "blge" | "bgt" | "blgt" => Ok(line.join(" ").parse::<Bra>()?.into()),
-        "cmp" | "cmn" | "tst" | "teq" => Ok(line.join(" ").parse::<Cmp>()?.into()),
-        "ldr" | "pop" => Ok(line.join(" ").parse::<Ldr>()?.into()),
-        "mov" | "neg" | "not" => Ok(line.join(" ").parse::<Mov>()?.into()),
-        "mul" => Ok(line.join(" ").parse::<Mul>()?.into()),
-        "orr" => Ok(line.join(" ").parse::<Orr>()?.into()),
-        "lsr" | "asr" | "ror" | "lsl" | "asl" | "rol" => Ok(line.join(" ").parse::<Shf>()?.into()),
-        "str" | "push" => Ok(line.join(" ").parse::<Str>()?.into()),
-        "sub" | "rsb" => Ok(line.join(" ").parse::<Sub>()?.into()),
-        "xor" => Ok(line.join(" ").parse::<Xor>()?.into()),
-        _ => panic!("Could not parse: {:?}", line),
-    }
+        | "blge" | "bgt" | "blgt" => line.join(" ").parse::<Bra>()?.into(),
+        "cmp" | "cmn" | "tst" | "teq" => line.join(" ").parse::<Cmp>()?.into(),
+        "ldr" | "pop" => line.join(" ").parse::<Ldr>()?.into(),
+        "mov" | "neg" | "not" => line.join(" ").parse::<Mov>()?.into(),
+        "mul" => line.join(" ").parse::<Mul>()?.into(),
+        "orr" => line.join(" ").parse::<Orr>()?.into(),
+        "lsr" | "asr" | "ror" | "lsl" | "asl" | "rol" => line.join(" ").parse::<Shf>()?.into(),
+        "str" | "push" => line.join(" ").parse::<Str>()?.into(),
+        "sub" | "rsb" => line.join(" ").parse::<Sub>()?.into(),
+        "xor" => line.join(" ").parse::<Xor>()?.into(),
+        _ => Err(ParseInstructionError::UnknownInstruction)?,
+    })
 }
