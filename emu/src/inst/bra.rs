@@ -5,7 +5,7 @@ use crate::{iarch, uarch, util, Processor, WORDSIZE};
 
 #[derive(Debug)]
 enum Cond {
-    Ra = 0b000,
+    Al = 0b000,
     Eq = 0b001,
     Ne = 0b010,
     Lt = 0b011,
@@ -52,7 +52,7 @@ impl From<uarch> for Bra {
             },
             link: (word & 0x0800) != 0,
             cond: match (word & 0x0700) >> 8 {
-                0b000 => Cond::Ra,
+                0b000 => Cond::Al,
                 0b001 => Cond::Eq,
                 0b010 => Cond::Ne,
                 0b011 => Cond::Lt,
@@ -87,7 +87,7 @@ impl Instruction for Bra {
             Op2::Imm(imm) => (*proc.regs[15] as iarch + imm as iarch) as uarch,
         };
         let act = match self.cond {
-            Cond::Ra => true,
+            Cond::Al => true,
             Cond::Eq => (*proc.sr & 0x0001) != 0, //                  Z
             Cond::Ne => (*proc.sr & 0x0001) == 0, //                 !Z
             Cond::Lt => (*proc.sr & 0x0002) != 0, //             N

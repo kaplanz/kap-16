@@ -1,8 +1,10 @@
 use std::path::PathBuf;
+use std::process;
 
 use clap::{crate_authors, crate_version, Clap, ValueHint};
 use emu::Emulator;
 use env_logger as logger;
+use log::error;
 
 fn main() {
     // Initialize logger
@@ -18,7 +20,10 @@ fn main() {
     // Instantiate an emulator
     let mut e = Emulator::new();
     // Load the ROM into memory
-    e.load(&opt.rom).unwrap();
+    e.load(&opt.rom).unwrap_or_else(|err| {
+        error!("`{}`: {}", &opt.rom.display(), err);
+        process::exit(1)
+    });
     // Run the emulator
     e.main();
 }

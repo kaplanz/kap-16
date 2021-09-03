@@ -1,10 +1,10 @@
 ## Branch
 
 Uses:
-`B[L]{[RA],EQ,NQ,LT,LE,GE,GT}`
+`B[L]{[AL],EQ,NQ,LT,LE,GE,GT}`
 
 Mnemonics:
-- **BRA**nch (unconditional)
+- **B**ranch **AL**ways
 - **EQ**ual
 - **N**ot **E**qual
 - **L**ess **T**han
@@ -24,7 +24,7 @@ Notes:
 Examples:
 ```assembly
 BL   &Ry    ; branch to address in Ry after performing a link
-BLRA &Ry    ; synonym of above (RA := unconditional branch)
+BLAL &Ry    ; synonym of above (AL := unconditional branch)
             ; a.k.a: LR <- PC, PC <- Ry
 BEQ  +0x40  ; branch to address (PC + 0x40), if previous result is zero
             ; a.k.a: if EQ then PC <- PC + 0x40
@@ -67,7 +67,7 @@ Link (L):
 Condition Code (C):
 | Flag  | Meaning |
 | ----- | ------- |
-| `000` | RA      |
+| `000` | AL      |
 | `001` | EQ      |
 | `010` | NE      |
 | `011` | LT      |

@@ -79,7 +79,7 @@ pub fn parse_reg(token: &str) -> Result<uarch> {
         static ref RE: Regex = Regex::new(r"^r(\d+)$").unwrap();
     }
     (|| match token {
-        "sr" => Some(13),
+        "sp" => Some(13),
         "lr" => Some(14),
         "pc" => Some(15),
         token => uarch::from_str_radix(&RE.captures(token)?.get(1)?.as_str(), 10).ok(),

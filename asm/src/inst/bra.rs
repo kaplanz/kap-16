@@ -99,7 +99,7 @@ impl FromStr for Bra {
         }?;
         // Parse cond
         let cond = match &*tokens[0] {
-            "b" | "bl" => Cond::Ra,
+            "b" | "bal" | "bl" | "blal" => Cond::Ra,
             "beq" | "bleq" => Cond::Eq,
             "bne" | "blne" => Cond::Ne,
             "blt" | "bllt" => Cond::Lt,
