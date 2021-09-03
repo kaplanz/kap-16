@@ -82,7 +82,7 @@ impl FromStr for Op2 {
     }
 }
 
-pub fn parse(line: &Vec<String>) -> Result<uarch, Box<dyn Error>> {
+pub fn assemble(line: &Vec<String>) -> Result<uarch, Box<dyn Error>> {
     match &*line[0] {
         "add" => Ok(line.join(" ").parse::<Add>()?.into()),
         "and" => Ok(line.join(" ").parse::<And>()?.into()),

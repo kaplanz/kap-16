@@ -1,26 +1,41 @@
 use std::collections::{HashMap, HashSet};
-use std::error::Error;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader};
 use std::mem;
 use std::path::PathBuf;
 
 use log::error;
 
-use crate::{iarch, inst, lex, uarch, WORDSIZE};
+use crate::line::Line;
+use crate::{iarch, inst, lex, uarch, AssemblerError, WORDSIZE};
 
 #[derive(Clone, Debug)]
 pub struct Unit {
-    path: PathBuf,
+    src: PathBuf,
+    lines: Vec<Line>,
     symbols: HashMap<String, usize>,
-    source: Vec<Vec<String>>,
 }
 
 impl Unit {
-    pub fn new(path: PathBuf, mut source: Vec<Vec<String>>) -> Self {
-        Unit {
-            path,
-            symbols: lex::extract(&mut source),
-            source,
-        }
+    pub fn new(src: PathBuf) -> io::Result<Self> {
+        // Read the input file
+        let f = File::open(&src)?;
+        // Construct lines from file
+        let lines: Vec<String> = BufReader::new(f).lines().collect::<Result<_, _>>()?;
+        let mut lines: Vec<Line> = lines
+            .into_iter()
+            .enumerate()
+            .map(|(idx, line)| Line::new(idx, line))
+            .filter(|line| !line.tokens.is_empty())
+            .collect();
+        // Extract symbols from lines
+        let symbols = lex::extract(&mut lines);
+        // Construct a source unit
+        Ok(Unit {
+            src,
+            lines,
+            symbols,
+        })
     }
 
     pub fn concat(mut self, mut other: Unit) -> Option<Self> {
@@ -31,7 +46,7 @@ impl Unit {
         if !duplicates.is_empty() {
             error!(
                 "Duplicate symbol(s) from `{}`: {:?}",
-                other.path.display(),
+                other.src.display(),
                 duplicates
             );
             return None;
@@ -40,19 +55,21 @@ impl Unit {
         other
             .symbols
             .iter_mut()
-            .for_each(|(_, idx)| *idx += self.source.len());
+            .for_each(|(_, idx)| *idx += self.lines.len());
         // Concatonate translation units
-        self.source.extend(other.source);
+        self.lines.extend(other.lines);
         self.symbols.extend(other.symbols);
         // Return combined unit
         Some(self)
     }
 
-    pub fn subst(&mut self) {
+    pub fn relocate(&mut self) {
         // Substitute symbols with addresses
-        let symbols = self.symbols.clone(); // FIXME
-        self.source.iter_mut().enumerate().for_each(|(idx, line)| {
-            line.iter_mut()
+        let symbols = &self.symbols;
+        let lines = &mut self.lines;
+        lines.iter_mut().enumerate().for_each(|(idx, line)| {
+            line.tokens
+                .iter_mut()
                 .skip(1)
                 .filter(|token| symbols.contains_key(*token))
                 .for_each(|token| {
@@ -63,7 +80,16 @@ impl Unit {
         });
     }
 
-    pub fn parse(&self) -> Result<Vec<uarch>, Box<dyn Error>> {
-        self.source.iter().map(inst::parse).collect()
+    pub fn assemble(&self) -> Result<Vec<uarch>, AssemblerError> {
+        self.lines
+            .iter()
+            .map(|line| {
+                inst::assemble(&line.tokens).map_err(|err| AssemblerError {
+                    err,
+                    loc: (self.src.clone(), line.number),
+                    line: line.content.clone(),
+                })
+            })
+            .collect()
     }
 }

@@ -82,7 +82,7 @@ impl FromStr for Ldr {
         // (also creates an owned String from &str)
         let s = s.to_lowercase();
         // Split into constituent tokens
-        let tokens = lex::tokenize(s).ok_or(ParseInstructionError::EmptyStr)?;
+        let tokens = lex::tokenize(&s).ok_or(ParseInstructionError::EmptyStr)?;
         // Ensure at least one token
         (tokens.len() > 0)
             .then(|| ())

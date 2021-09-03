@@ -90,7 +90,7 @@ impl FromStr for Bra {
         // (also creates an owned String from &str)
         let s = s.to_lowercase();
         // Split into constituent tokens
-        let tokens = lex::tokenize(s).ok_or(ParseInstructionError::EmptyStr)?;
+        let tokens = lex::tokenize(&s).ok_or(ParseInstructionError::EmptyStr)?;
         // Ensure correct number of tokens
         match tokens.len().cmp(&2) {
             Ordering::Less => Err(ParseInstructionError::MissingOps),

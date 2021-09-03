@@ -6,6 +6,7 @@ use std::result;
 use lazy_static::lazy_static;
 use regex::Regex;
 
+use crate::line::Line;
 use crate::uarch;
 
 const COMMENT: &str = ";";
@@ -36,7 +37,7 @@ impl Error for ParseLexemeError {}
 
 type Result<T> = result::Result<T, ParseLexemeError>;
 
-pub fn tokenize(line: String) -> Option<Vec<String>> {
+pub fn tokenize(line: &str) -> Option<Vec<String>> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"\b").unwrap();
     }
@@ -52,16 +53,17 @@ pub fn tokenize(line: String) -> Option<Vec<String>> {
     }
 }
 
-pub fn extract(source: &mut Vec<Vec<String>>) -> HashMap<String, usize> {
+pub fn extract(lines: &mut Vec<Line>) -> HashMap<String, usize> {
     // Extract symbols from source
     let mut idx = 0;
     let mut symbols = HashMap::new();
-    source.retain(|line| {
+    lines.retain(|line| {
+        let tokens = &line.tokens;
         // Check if we have a symbol
-        let is_symbol = line.len() == 2 && is_word(&line[0]) && &line[1] == SYMBOL;
+        let is_symbol = tokens.len() == 2 && is_word(&tokens[0]) && &tokens[1] == SYMBOL;
         if is_symbol {
             // Move the symbol, keeping track of the index
-            symbols.insert(line[0].to_string(), idx);
+            symbols.insert(tokens[0].to_string(), idx);
             false // remove symbol
         } else {
             idx += 1;
