@@ -18,19 +18,21 @@ Notes:
 
 Examples:
 ```assembly
-STR Rx, &Ry     ; load data from Rx into address in Ry
-                ; a.k.a: *Ry <- Rx
-STR Rx, &+0x40  ; load data from Rx into address offset +0x40
-                ; a.k.a: *(PC + 0x40) <- Rx
-PUSH Rx         ; push Rx onto the stack
-                ; a.k.a: SP <- SP - 2, *SP <- Rx
+STR Rx, &Ry    ; load data from Rx into address in Ry
+               ; a.k.a: *Ry <- Rx
+STR Rx, &0x40  ; load data from Rx into address offset 0x40
+               ; a.k.a: *(PC + 0x40) <- Rx
+STR Rx, _foo   ; load data from Rx into address at symbol `_foo`
+               ; a.k.a: *_foo <- Rx
+PUSH Rx        ; push Rx onto the stack
+               ; a.k.a: SP <- SP - 2, *SP <- Rx
 ```
 
 Format (Op2):
 ```
 │15  12│11   8│ 7 │ 6 │5  4│3    0│
 ┌──────┬──────┬───┬───┬────┬──────┐
-│ 1101 │ XXXX │ 0 │ 0 │ -- │ YYYY │
+│ 0010 │ XXXX │ 0 │ 0 │ -- │ YYYY │
 └──────┴──────┴───┴───┴────┴──────┘
 ```
 
@@ -38,7 +40,7 @@ Format (Push):
 ```
 │15  12│11   8│ 7 │ 6 │5      0│
 ┌──────┬──────┬───┬───┬────────┐
-│ 1101 │ XXXX │ 0 │ 1 │ ------ │
+│ 0010 │ XXXX │ 0 │ 1 │ ------ │
 └──────┴──────┴───┴───┴────────┘
 ```
 
@@ -46,7 +48,7 @@ Format (Imm):
 ```
 │15  12│11   8│ 7 │6       0│
 ┌──────┬──────┬───┬─────────┐
-│ 1101 │ XXXX │ 1 │ DDDDDDD │
+│ 0010 │ XXXX │ 1 │ DDDDDDD │
 └──────┴──────┴───┴─────────┘
 ```
 
@@ -55,8 +57,6 @@ Legend:
 | -------- | ---------------- |
 | `0`, `1` | Literal bit      |
 | `D`      | Immediate data   |
-| `I`      | Immediate flag   |
-| `P`      | Push flag        |
 | `X`      | Destination `Rx` |
 | `Y`      | Source `Ry`      |
 | `-`      | Unused           |

@@ -1,77 +1,62 @@
 ## Branch
 
 Uses:
-`B[L]{[AL],EQ,NQ,LT,LE,GE,GT}`
+`GOTO`, `CALL`
 
 Mnemonics:
-- **B**ranch **AL**ways
-- **EQ**ual
-- **N**ot **E**qual
-- **L**ess **T**han
-- **L**ess than or **E**qual
-- **G**reater than or **E**qual
-- **G**reater **T**han
+- **GO** **TO**
+- **CALL**
 
 Description:
-> Branch to another instruction if specific conditions have been met.
+> Branch (goto) another point in the code and continue execution.
 > Functionally equivalent to moving into the PC.
 
-Condition Codes: None
+Condition Codes:
+| Flag     | Modified |
+| -------- | -------- |
+| Carry    | &cross;  |
+| Negative | &cross;  |
+| Overflow | &cross;  |
+| Zero     | &cross;  |
 
 Notes:
 - May use a symbol optionally instead of an address offset
 
 Examples:
 ```assembly
-BL   &Ry    ; branch to address in Ry after performing a link
-BLAL &Ry    ; synonym of above (AL := unconditional branch)
+CALL &Ry    ; branch to address in Ry after performing a link
             ; a.k.a: LR <- PC, PC <- Ry
-BEQ  +0x40  ; branch to address (PC + 0x40), if previous result is zero
-            ; a.k.a: if EQ then PC <- PC + 0x40
-BLNE _foo   ; branch and link to the symbol `_foo`
-            ; (perform a procedure call)
+GOTO 0x40   ; branch to address (PC + 0x40)
+            ; a.k.a: PC <- PC + 0x40
+CALL _foo   ; branch and link to the symbol `_foo`
+            ; (performs a procedure call)
 ```
 
 Format (Op2):
 ```
-│15  12│11 │10  8│ 7 │6   4│3    0│
-┌──────┬───┬─────┬───┬─────┬──────┐
-│ 1111 │ L │ CCC │ 0 │ --- │ YYYY │
-└──────┴───┴─────┴───┴─────┴──────┘
+│15   11│10 │9  8│ 7 │6   4│3    0│
+┌───────┬───┬────┬───┬─────┬──────┐
+│ 00000 │ L │ -- │ 0 │ --- │ YYYY │
+└───────┴───┴────┴───┴─────┴──────┘
 ```
 
 Format (Imm):
 ```
-│15  12│11 │10  8│ 7 │6       0│
-┌──────┬───┬─────┬───┬─────────┐
-│ 1111 │ L │ CCC │ 1 │ DDDDDDD │
-└──────┴───┴─────┴───┴─────────┘
+│15   11│10 │9  8│ 7 │6       0│
+┌───────┬───┬────┬───┬─────────┐
+│ 00000 │ L │ -- │ 1 │ DDDDDDD │
+└───────┴───┴────┴───┴─────────┘
 ```
 
 Legend:
 | Format   | Use              |
 | -------- | ---------------- |
 | `0`, `1` | Literal bit      |
-| `C`      | Condition code   |
 | `D`      | Immediate data   |
-| `I`      | Immediate flag   |
 | `L`      | Link flag        |
-| `X`      | Destination `Rx` |
 | `Y`      | Source `Ry`      |
 | `-`      | Unused           |
 
 Link (L):
 > When set, "link" on the branch.
 > (Copies `PC <- LR` before performing the branch.)
-
-Condition Code (C):
-| Flag  | Meaning |
-| ----- | ------- |
-| `000` | AL      |
-| `001` | EQ      |
-| `010` | NE      |
-| `011` | LT      |
-| `100` | LE      |
-| `101` | GE      |
-| `110` | GT      |
-| `111` | &mdash; |

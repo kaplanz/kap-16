@@ -1,4 +1,4 @@
-## Multiply
+## Arithmetic Multiply
 
 Uses:
 `MUL`
@@ -10,7 +10,12 @@ Description:
 > Perform an arithmetic multiplication.
 
 Condition Codes:
-- Set: carry, overflow, negative, zero
+| Flag     | Modified |
+| -------- | -------- |
+| Carry    | &check;  |
+| Negative | &check;  |
+| Overflow | &check;  |
+| Zero     | &check;  |
 
 Examples:
 ```assembly
@@ -22,7 +27,7 @@ Format (Op2):
 ```
 │15  12│11   8│ 7 │6   4│3    0│
 ┌──────┬──────┬───┬─────┬──────┐
-│ 0111 │ XXXX │ 0 │ --- │ YYYY │
+│ 0110 │ XXXX │ 0 │ --- │ YYYY │
 └──────┴──────┴───┴─────┴──────┘
 ```
 
@@ -30,7 +35,7 @@ Format (Imm):
 ```
 │15  12│11   8│ 7 │6       0│
 ┌──────┬──────┬───┬─────────┐
-│ 0111 │ XXXX │ 1 │ DDDDDDD │
+│ 0110 │ XXXX │ 1 │ DDDDDDD │
 └──────┴──────┴───┴─────────┘
 ```
 
@@ -39,7 +44,6 @@ Legend:
 | -------- | ---------------- |
 | `0`, `1` | Literal bit      |
 | `D`      | Immediate data   |
-| `I`      | Immediate flag   |
 | `X`      | Destination `Rx` |
 | `Y`      | Source `Ry`      |
 | `-`      | Unused           |

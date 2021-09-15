@@ -5,7 +5,7 @@ Uses:
 
 Mnemonics:
 - **C**o**MP**are
-- **C**o**M**pare additio**N**
+- **C**o**M**pare **N**egative (ADD)
 - **T**e**ST** (AND)
 - **T**e**S**t e**q**uql (XOR)
 
@@ -14,7 +14,12 @@ Description:
 > No registers are modified by this instruction.
 
 Condition Codes: (see [`ADD`](./ADD.md), [`SUB`](./SUB.md), [`AND`](./AND.md), [`XOR`](./XOR.md))
-- Set: carry, overflow, negative, zero
+| Flag     | Modified |
+| -------- | -------- |
+| Carry    | &check;  |
+| Negative | &check;  |
+| Overflow | &check;  |
+| Zero     | &check;  |
 
 Operation:
 | Instruction | Operation       |
@@ -36,7 +41,7 @@ Format (Op2):
 ```
 │15  │13  │11   8│ 7 │6   4│3    0│
 ┌────┬────┬──────┬───┬─────┬──────┐
-│ 00 │ MM │ XXXX │ 0 │ --- │ YYYY │
+│ 10 │ MM │ XXXX │ 0 │ --- │ YYYY │
 └────┴────┴──────┴───┴─────┴──────┘
 ```
 
@@ -44,7 +49,7 @@ Format (Imm):
 ```
 │15  │13  │11   8│ 7 │6       0│
 ┌────┬────┬──────┬───┬─────────┐
-│ 00 │ MM │ XXXX │ 1 │ DDDDDDD │
+│ 10 │ MM │ XXXX │ 1 │ DDDDDDD │
 └────┴────┴──────┴───┴─────────┘
 ```
 
@@ -53,7 +58,6 @@ Legend:
 | -------- | ---------------- |
 | `0`, `1` | Literal bit      |
 | `D`      | Immediate data   |
-| `I`      | Immediate flag   |
 | `M`      | Mode flags       |
 | `X`      | Destination `Rx` |
 | `Y`      | Source `Ry`      |
@@ -62,7 +66,7 @@ Legend:
 Mode (M):
 | Flag  | Meaning |
 | ----- | ------- |
-| `00`  | CMP     |
-| `01`  | CMN     |
-| `10`  | TST     |
-| `11`  | TEQ     |
+| `00`  | `CMP`   |
+| `01`  | `CMN`   |
+| `10`  | `TST`   |
+| `11`  | `TEQ`   |

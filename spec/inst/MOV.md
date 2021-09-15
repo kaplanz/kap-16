@@ -5,11 +5,17 @@ Uses:
 
 Mnemonics:
 - **MOV**e
-- Logical **NEG**ate (ones complement)
-- Arithmetic **NOT** (twos complement)
+- Arithmetic **NEG**ate (twos complement)
+- Logical **NOT** (ones complement)
 - **N**o **Op**eration
 
-Condition Codes: None
+Condition Codes:
+| Flag     | Modified |
+| -------- | -------- |
+| Carry    | &cross;  |
+| Negative | &cross;  |
+| Overflow | &cross;  |
+| Zero     | &cross;  |
 
 Description:
 > Copy ("move") the data from one register to another.
@@ -33,7 +39,7 @@ Format (Op2):
 ```
 │15  12│11   8│ 7 │ 6 │5  4│3    0│
 ┌──────┬──────┬───┬───┬────┬──────┐
-│ 1010 │ XXXX │ 0 │ - │ MM │ YYYY │
+│ 0111 │ XXXX │ 0 │ - │ MM │ YYYY │
 └──────┴──────┴───┴───┴────┴──────┘
 ```
 
@@ -41,7 +47,7 @@ Format (Imm):
 ```
 │15  12│11   8│ 7 │6       0│
 ┌──────┬──────┬───┬─────────┐
-│ 1010 │ XXXX │ 1 │ DDDDDDD │
+│ 0111 │ XXXX │ 1 │ DDDDDDD │
 └──────┴──────┴───┴─────────┘
 ```
 
@@ -50,7 +56,6 @@ Legend:
 | -------- | ---------------- |
 | `0`, `1` | Literal bit      |
 | `D`      | Immediate data   |
-| `I`      | Immediate flag   |
 | `M`      | Mode flags       |
 | `X`      | Destination `Rx` |
 | `Y`      | Source `Ry`      |

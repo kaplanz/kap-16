@@ -10,8 +10,12 @@ Description:
 > Perform a logical OR operation.
 
 Condition Codes:
-- Cleared: carry, overflow
-- Set: negative, zero
+| Flag     | Modified |
+| -------- | -------- |
+| Carry    | &empty;  |
+| Negative | &check;  |
+| Overflow | &empty;  |
+| Zero     | &check;  |
 
 Examples:
 ```assembly
@@ -23,7 +27,7 @@ Format (Op2):
 ```
 │15  12│11   8│ 7 │6   4│3    0│
 ┌──────┬──────┬───┬─────┬──────┐
-│ 0100 │ XXXX │ 0 │ --- │ YYYY │
+│ 1101 │ XXXX │ 0 │ --- │ YYYY │
 └──────┴──────┴───┴─────┴──────┘
 ```
 
@@ -31,7 +35,7 @@ Format (Imm):
 ```
 │15  12│11   8│ 7 │6       0│
 ┌──────┬──────┬───┬─────────┐
-│ 0100 │ XXXX │ 1 │ DDDDDDD │
+│ 1101 │ XXXX │ 1 │ DDDDDDD │
 └──────┴──────┴───┴─────────┘
 ```
 
@@ -40,7 +44,6 @@ Legend:
 | -------- | ---------------- |
 | `0`, `1` | Literal bit      |
 | `D`      | Immediate data   |
-| `I`      | Immediate flag   |
 | `X`      | Destination `Rx` |
 | `Y`      | Source `Ry`      |
 | `-`      | Unused           |

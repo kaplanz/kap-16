@@ -7,30 +7,50 @@
 ## Instructions
 
 Below is a directory is all currently supported instructions.
+They are divided into four categories:
+- Alias: alternate name and interface for another instruction.
+- Base: a common implementation for a group of instruction variants; cannot use directly.
+- Core: an instruction whose operation is directly implemented; may have variants.
+- Pseudo: an instruction implemented via another; a shorthand.
+- Variant: a variation on another instruction.
 
-| Instruction              | Description    |
-| ------------------------ | -------------- |
-| [`ADD`](./inst/ADD.md)   | Add            |
-| [`AND`](./inst/AND.md)   | Logical AND    |
-| [`BRA`](./inst/BRA.md)   | Branch         |
-| [`CMN`](./inst/CMN.md)   | Compare (ADD)  |
-| [`CMP`](./inst/CMP.md)   | Compare (SUB)  |
-| [`LDR`](./inst/LDR.md)   | Load           |
-| [`MOV`](./inst/MOV.md)   | Move           |
-| [`MUL`](./inst/MUL.md)   | Multiply       |
-| [`NEG`](./inst/NEG.md)   | Logical Negate |
-| [`NOP`](./inst/NOP.md)   | No Operation   |
-| [`NOT`](./inst/NOT.md)   | Arithmetic NOT |
-| [`ORR`](./inst/ORR.md)   | Logical OR     |
-| [`POP`](./inst/POP.md)   | Pop Register   |
-| [`PUSH`](./inst/PUSH.md) | Push Register  |
-| [`RSB`](./inst/RSB.md)   | Reverse SUB    |
-| [`SHF`](./inst/SHF.md)   | Shift          |
-| [`STR`](./inst/STR.md)   | Store          |
-| [`SUB`](./inst/SUB.md)   | Subtract       |
-| [`TEQ`](./inst/TEQ.md)   | Compare (XOR)  |
-| [`TST`](./inst/TST.md)   | Compare (AND)  |
-| [`XOR`](./inst/XOR.md)   | Logical XOR    |
+Only core instructions have their own designated opcode.
+Variants are implemented within the namespace of their corresponding core instruction.
+
+| Instruction              | Description            | Type    |
+| ------------------------ | ---------------------- | ------- |
+| [`ADD`](./inst/ADD.md)   | Arithmetic Add         | Core    |
+| [`AND`](./inst/AND.md)   | Logical AND            | Core    |
+| [`ASL`](./inst/ASL.md)   | Arithmetic Shift Left  | Variant |
+| [`ASR`](./inst/ASR.md)   | Arithmetic Shift Right | Variant |
+| [`BRA`](./inst/BRA.md)   | Branch                 | Base    |
+| [`CALL`](./inst/CALL.md) | Call (branch + link)   | Variant |
+| [`CMN`](./inst/CMN.md)   | Compare by ADD         | Variant |
+| [`CMP`](./inst/CMP.md)   | Compare by SUB         | Core    |
+| [`GOTO`](./inst/GOTO.md) | Goto (branch)          | Alias   |
+| [`HLT`](./inst/HLT.md)   | Halt                   | Core    |
+| [`IFF`](./inst/IFF.md)   | Conditional If         | Core    |
+| [`LDR`](./inst/LDR.md)   | Load                   | Core    |
+| [`LSL`](./inst/LSL.md)   | Logical Shift Left     | Variant |
+| [`LSR`](./inst/LSR.md)   | Logical Shift Right    | Variant |
+| [`MOV`](./inst/MOV.md)   | Move                   | Core    |
+| [`MUL`](./inst/MUL.md)   | Arithmetic Multiply    | Core    |
+| [`NEG`](./inst/NEG.md)   | Arithmetic Negate      | Variant |
+| [`NOP`](./inst/NOP.md)   | No Operation           | Pseudo  |
+| [`NOT`](./inst/NOT.md)   | Logical NOT            | Variant |
+| [`ORR`](./inst/ORR.md)   | Logical OR             | Core    |
+| [`POP`](./inst/POP.md)   | Pop Register           | Variant |
+| [`PUSH`](./inst/PUSH.md) | Push Register          | Variant |
+| [`RSB`](./inst/RSB.md)   | Reverse SUB            | Variant |
+| [`ROL`](./inst/ASL.md)   | Rotate Left            | Variant |
+| [`ROR`](./inst/ASR.md)   | Rotate Right           | Variant |
+| [`SHF`](./inst/SHF.md)   | Shift                  | Base    |
+| [`STR`](./inst/STR.md)   | Store                  | Core    |
+| [`SUB`](./inst/SUB.md)   | Arithmetic Subtract    | Core    |
+| [`SYS`](./inst/SYS.md)   | System (reserved)      | Core    |
+| [`TEQ`](./inst/TEQ.md)   | Compare by XOR         | Variant |
+| [`TST`](./inst/TST.md)   | Compare by AND         | Variant |
+| [`XOR`](./inst/XOR.md)   | Logical XOR            | Core    |
 
 ## Registers
 
@@ -40,7 +60,7 @@ Below is a directory is all currently supported instructions.
 | R1       | A1      | **A**rgument 1          | &mdash;        |
 | R2       | A2      | **A**rgument 2          | &mdash;        |
 | R3       | A3      | **A**rgument 3          | &mdash;        |
-| R4...R12 | &mdash; | General Purpose         | Callee         |
+| R4...R12 | G0...G8 | **G**eneral Purpose     | Callee         |
 | R13      | SP      | **S**tack **P**ointer   | Callee         |
 | R14      | LR      | **L**ink **R**egister   | Caller         |
 | R15      | PC      | **P**rogram **C**ounter | &mdash;        |
@@ -53,11 +73,11 @@ Callers of a procedure cannot expect data to remain within these registers after
 Additionally, the argument registers may optionally be used to return data from a procedure.
 This should be outlined specifically in by the procedure's author.
 
-### Unnamed Registers
+### General Registers
 
-The unnamed registers, R4 to R12, do not have a designated use.
-As general purpose registers, their usage within a program is up to the programmer.
-However, it is important to note that if they are modified in a procedure, the previous values must be restored by the callee.
+The general registers, G0 to G8, also known as R4 to R12, do not have any special use.
+Rather, as general purpose registers their usage within a program is up to the programmer.
+It is important to note that if they are modified within in a procedure, the previous values must be restored by the callee before returning.
 To easily save and restored a register's value, use the [`PUSH`](./inst/PUSH.md) and [`POP`](./inst/POP.md) instructions respectively.
 
 ### Stack Pointer
@@ -94,14 +114,13 @@ Layout:
 ```
 
 Legend:
-| Format   | Use                            |
-| -------- | ------------------------------ |
-| `0`, `1` | Literal bit                    |
-| `C`      | [Carry flag][carry-flag]       |
-| `N`      | [Negative flag][negative-flag] |
-| `V`      | [Overflow flag][overflow-flag] |
-| `Z`      | [Zero flag][zero-flag]         |
-| `-`      | Unused                         |
+| Format | Use                            |
+| ------ | ------------------------------ |
+| `C`    | [Carry flag][carry-flag]       |
+| `N`    | [Negative flag][negative-flag] |
+| `V`    | [Overflow flag][overflow-flag] |
+| `Z`    | [Zero flag][zero-flag]         |
+| `-`    | Unused                         |
 
 [stack-pointer]: https://en.wikipedia.org/wiki/Call_stack#STACK-POINTER
 [hardware-stack]: https://en.wikipedia.org/wiki/Stack_(abstract_data_type)#Hardware_stack

@@ -1,4 +1,4 @@
-## Add
+## Arithmetic Add
 
 Uses:
 `ADD`
@@ -10,7 +10,12 @@ Description:
 > Perform an arithmetic addition.
 
 Condition Codes:
-- Set: carry, overflow, negative, zero
+| Flag     | Modified |
+| -------- | -------- |
+| Carry    | &check;  |
+| Negative | &check;  |
+| Overflow | &check;  |
+| Zero     | &check;  |
 
 Examples:
 ```assembly
@@ -39,7 +44,6 @@ Legend:
 | -------- | ---------------- |
 | `0`, `1` | Literal bit      |
 | `D`      | Immediate data   |
-| `I`      | Immediate flag   |
 | `X`      | Destination `Rx` |
 | `Y`      | Source `Ry`      |
 | `-`      | Unused           |

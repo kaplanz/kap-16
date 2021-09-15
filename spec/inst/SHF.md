@@ -13,7 +13,12 @@ Description:
 > Perform a logical, arithmetic, or rotate shift.
 
 Condition Codes:
-- Set: carry, overflow, negative, zero
+| Flag     | Modified |
+| -------- | -------- |
+| Carry    | &check;  |
+| Negative | &check;  |
+| Overflow | &check;  |
+| Zero     | &check;  |
 
 Notes:
 - Logical shifts always fill with zeros.
@@ -31,7 +36,7 @@ Format (Op2):
 ```
 │15  12│11   8│ 7 │ 6 │5  4│3    0│
 ┌──────┬──────┬───┬───┬────┬──────┐
-│ 1110 │ XXXX │ 0 │ L │ MM │ YYYY │
+│ 1111 │ XXXX │ 0 │ L │ MM │ YYYY │
 └──────┴──────┴───┴───┴────┴──────┘
 ```
 
@@ -39,7 +44,7 @@ Format (Imm):
 ```
 │15  12│11   8│ 7 │ 6 │5  4│3    0│
 ┌──────┬──────┬───┬───┬────┬──────┐
-│ 1110 │ XXXX │ 1 │ L │ MM │ DDDD │
+│ 1111 │ XXXX │ 1 │ L │ MM │ DDDD │
 └──────┴──────┴───┴───┴────┴──────┘
 ```
 
@@ -48,7 +53,6 @@ Legend:
 | -------- | ---------------- |
 | `0`, `1` | Literal bit      |
 | `D`      | Immediate data   |
-| `I`      | Immediate flag   |
 | `L`      | Left flag        |
 | `M`      | Mode flags       |
 | `X`      | Destination `Rx` |

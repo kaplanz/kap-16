@@ -1,4 +1,4 @@
-## Subtract
+## Arithmetic Subtract
 
 Uses:
 `SUB`, `RSB`
@@ -25,7 +25,7 @@ Format (Op2):
 ```
 │15 13│12 │11   8│ 7 │6   4│3    0│
 ┌─────┬───┬──────┬───┬─────┬──────┐
-│ 100 │ M │ XXXX │ 0 │ --- │ YYYY │
+│ 010 │ M │ XXXX │ 0 │ --- │ YYYY │
 └─────┴───┴──────┴───┴─────┴──────┘
 ```
 
@@ -33,7 +33,7 @@ Format (Imm):
 ```
 │15 13│12 │11   8│ 7 │6       0│
 ┌─────┬───┬──────┬───┬─────────┐
-│ 100 │ M │ XXXX │ 1 │ DDDDDDD │
+│ 010 │ M │ XXXX │ 1 │ DDDDDDD │
 └─────┴───┴──────┴───┴─────────┘
 ```
 
@@ -42,7 +42,6 @@ Legend:
 | -------- | ---------------- |
 | `0`, `1` | Literal bit      |
 | `D`      | Immediate data   |
-| `I`      | Immediate flag   |
 | `M`      | Mode flags       |
 | `X`      | Destination `Rx` |
 | `Y`      | Source `Ry`      |

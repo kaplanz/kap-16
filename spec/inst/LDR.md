@@ -23,10 +23,12 @@ Examples:
 ```assembly
 LDR Rx, *Ry      ; load data from address in Ry into Rx
                  ; a.k.a: Rx <- *Ry
-LDR Rx, *+0x40   ; load data from address offset +0x40 into Rx
+LDR Rx, *0x40    ; load data from address offset 0x40 into Rx
                  ; a.k.a: Rx <- *(PC + 0x40)
 LDR Rx, =0d1234  ; load data 0d1234 into Rx from memory
                  ; a.k.a: Rx <- 1234
+LDR Rx, _foo     ; load data address at symbol `_foo` into Rx
+                 ; a.k.a: *_foo <- Rx
 POP Rx           ; pop Rx from the stack
                  ; a.k.a: Rx <- *SP, SP <- SP + 2
 ```
@@ -35,7 +37,7 @@ Format (Op2):
 ```
 │15  12│11   8│ 7 │ 6 │5  4│3    0│
 ┌──────┬──────┬───┬───┬────┬──────┐
-│ 1011 │ XXXX │ 0 │ 0 │ -- │ YYYY │
+│ 0011 │ XXXX │ 0 │ 0 │ -- │ YYYY │
 └──────┴──────┴───┴───┴────┴──────┘
 ```
 
@@ -43,7 +45,7 @@ Format (Pop):
 ```
 │15  12│11   8│ 7 │ 6 │5      0│
 ┌──────┬──────┬───┬───┬────────┐
-│ 1011 │ XXXX │ 0 │ 1 │ ------ │
+│ 0011 │ XXXX │ 0 │ 1 │ ------ │
 └──────┴──────┴───┴───┴────────┘
 ```
 
@@ -51,7 +53,7 @@ Format (Imm):
 ```
 │15  12│11   8│ 7 │6       0│
 ┌──────┬──────┬───┬─────────┐
-│ 1011 │ XXXX │ 1 │ DDDDDDD │
+│ 0011 │ XXXX │ 1 │ DDDDDDD │
 └──────┴──────┴───┴─────────┘
 ```
 
@@ -60,8 +62,6 @@ Legend:
 | -------- | ---------------- |
 | `0`, `1` | Literal bit      |
 | `D`      | Immediate data   |
-| `I`      | Immediate flag   |
-| `P`      | Pop flag         |
 | `X`      | Destination `Rx` |
 | `Y`      | Source `Ry`      |
 | `-`      | Unused           |
