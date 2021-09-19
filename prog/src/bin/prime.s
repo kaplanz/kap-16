@@ -2,57 +2,63 @@
 ; Author:      Zakhary Kaplan <https://zakharykaplan.ca>
 ; Created:     02 Sep 2021
 ; Version:     0.1.0
-; SPDX-License-Identifier: NONE
+; SPDX-License-Identifier: MIT
 
-_setup:
-    mov sp, 0b1         ; let sp = 0x4000
-    lsl sp, 0d14
+.init sp 0x4000
 
+.entry
+.func
 _main:
-    mov r4, 0d32        ; let cur: r4 = 32
-_main__loop:
-    mov r0, r4
-    bl  _is_prime       ; call is_prime(cur) -> res
-    cmp r0, 0b0         ; if res == false:
-    beq 0x0002          ; else: // res == true
-    push r4             ;     push cur
-    sub r4, 0d1         ; cur--
-    cmp r4, 0d1         ; if cur > 1
-    bgt _main__loop     ;     goto loop
-_main__end:
-    b   _main__end      ; goto end // loop forever
+    mov g0, 0d32        ; let cur: g0 = 32
+loop:
+    mov a0, g0
+    call _is_prime      ; call is_prime(cur) -> res
+    cmp a0, 0b0
+    ifne                ; if res != false:
+    push g0             ;   push cur
+    sub g0, 0d1         ; cur--
+    cmp g0, 0d1
+    ifgt                ; if cur > 1:
+    goto loop           ;   goto loop
+end:
+    hlt                 ; halt the processor
+.end
 
 ;
 ; @func: is_prime(n)
 ; @desc: Check if a number is prime.
 ;
-; @arg0 n: number to check primeness
+; @arg0 nun: number to check primeness
 ;
 ; @ret0 res: boolean result
 ;
+.func
 _is_prime:
     push lr
-    push r4
-    push r5
-    mov r4, r0          ; let n: r4 = arg0
-    mov r5, r0          ; let count: r5 = n
-_is_prime__loop:
-    sub r5, 0d1         ; count--
-    cmp r5, 0d1         ; if count <= 1:
-    ble _is_prime__end  ;     goto done
-    mov r0, r4
-    mov r1, r5
-    bl  _divide         ; call divide(n, count) -> (qut, rem)
-    cmp r1, 0b0         ; if rem != 0:
-    bne _is_prime__loop ;     goto loop
-_is_prime__end:
-    mov r0, r1          ; let res: ret0 = rem
-    cmp r0, 0b0         ; res = (qot == 0) ? false : true
-    beq 0x0002
-    mov r0, 0b1
-    pop r5
-    pop r4
+    push g0
+    push g1
+    mov g0, a0          ; let num: g0 = arg0
+    mov g1, g0          ; let cur: g1 = num
+loop:
+    sub g1, 0d1         ; cur--
+    cmp g1, 0d1
+    ifle                ; if cur <= 1:
+    goto end            ;   goto end
+    mov a0, g0
+    mov a1, g1
+    call _divide        ; call divide(num, cur) -> (qut, rem)
+    cmp a1, 0b0
+    ifne                ; if rem != 0:
+    goto loop           ;   goto loop
+end:
+    mov a0, a1          ; let res: ret0 = (bool)rem
+    cmp a0, 0b0
+    ifne
+    mov a0, 0b1
+    pop g1
+    pop g0
     pop pc              ; return
+.end
 
 ;
 ; @func: divide(num, den)
@@ -64,15 +70,18 @@ _is_prime__end:
 ; @ret0 qot: quotient,  equal to `num / den`
 ; @ret1 rem: remainder, equal to `num % den`
 ;
+.func
 _divide:
-    mov r2, r0          ; let num: r2 = arg0
-    mov r0, 0d0         ; let count: r0 = 0
-_divide__loop:
-    cmp r2, r1          ; if num < den:
-    blt _divide__end    ;     goto end
-    sub r2, r1          ; num -= den
-    add r0, 0d1         ; count++
-    b   _divide__loop   ; goto loop
-_divide__end:           ;
-    mov r1, r2          ; let qot: ret0 = count
+    mov a2, a0          ; let num: a2 = arg0
+    mov a0, 0d0         ; let cur: a0 = 0
+loop:
+    cmp a2, a1
+    iflt                ; while num >= den {
+    goto end
+    sub a2, a1          ;   num -= den
+    add a0, 0d1         ;   cur++
+    goto loop           ; }
+end:
+    mov a1, a2          ; let qot: ret0 = cur
     mov pc, lr          ; return
+.end

@@ -1,8 +1,7 @@
 ## Shift
 
 Uses:
-`LSR`, `ASR`, `ROR`,
-`LSL`, `ASL`, `ROL`
+`LS{R,L}`, `AS{R,L}`, `RO{R,L}`,
 
 Mnemonics:
 - **L**ogical **S**hift **R**ight/**L**eft
