@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::process;
 
 use asm::Assembler;
-use clap::{crate_authors, crate_version, Clap, ValueHint};
+use clap::{crate_authors, crate_version, Parser, ValueHint};
 use env_logger as logger;
 use log::error;
 
@@ -15,12 +15,12 @@ fn main() {
         .parse_default_env()
         .init();
     // Parse opts
-    let opt = Opt::parse();
+    let opts = Opts::parse();
 
     // Instantiate an assembler
     let mut a = Assembler::new();
     // Source each input file
-    for file in &opt.srcs {
+    for file in &opts.srcs {
         a.source(file).unwrap_or_else(|err| {
             error!("`{}`: {}", file.display(), err);
             process::exit(1);
@@ -32,17 +32,17 @@ fn main() {
         process::exit(2);
     });
     // Write output file
-    a.write(&opt.out).unwrap_or_else(|err| {
-        error!("`{}`: {}", &opt.out.display(), err);
+    a.write(&opts.out).unwrap_or_else(|err| {
+        error!("`{}`: {}", &opts.out.display(), err);
         process::exit(1);
     });
 }
 
 /// Assembler for the KAP-16 processor.
-#[derive(Clap, Debug)]
+#[derive(Parser, Debug)]
 #[clap(author = crate_authors!())]
 #[clap(version = crate_version!())]
-struct Opt {
+struct Opts {
     /// Input source file
     #[clap(parse(from_os_str))]
     #[clap(required = true)]
