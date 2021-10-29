@@ -94,7 +94,7 @@ impl FromStr for Shf {
             "lsl" => Mode::Lsl,
             "asl" => Mode::Asl,
             "rol" => Mode::Rol,
-            _ => Err(ParseInstructionError::BadInstruction)?,
+            _ => return Err(ParseInstructionError::BadInstruction.into()),
         };
         // Parse op1
         let op1 = lex::parse_reg(&tokens[1])?;

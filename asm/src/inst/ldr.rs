@@ -84,14 +84,14 @@ impl FromStr for Ldr {
         // Split into constituent tokens
         let tokens = lex::tokenize(&s).ok_or(ParseInstructionError::EmptyStr)?;
         // Ensure at least one token
-        (tokens.len() > 0)
+        (!tokens.is_empty())
             .then(|| ())
             .ok_or(ParseInstructionError::MissingOps)?;
         // Parse mode
         let mode = match &*tokens[0] {
             "ldr" => Mode::Ldr,
             "pop" => Mode::Pop,
-            _ => Err(ParseInstructionError::BadInstruction)?,
+            _ => return Err(ParseInstructionError::BadInstruction.into()),
         };
         let ntokens = match mode {
             Mode::Ldr => 4,

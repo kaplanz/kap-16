@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{self, Display};
 use std::result;
@@ -6,11 +5,7 @@ use std::result;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-use crate::line::Line;
 use crate::uarch;
-
-const COMMENT: &str = ";";
-const SYMBOL: &str = ":";
 
 #[derive(Debug)]
 pub enum ParseLexemeError {
@@ -45,33 +40,12 @@ pub fn tokenize(line: &str) -> Option<Vec<String>> {
         .split_whitespace() // split at whitespace
         .flat_map(|s| RE.split(s).filter(|s| !s.is_empty()))
         .map(String::from) // convert from &str -> String
-        .take_while(|s| !s.eq(COMMENT)) // strip comments
+        .take_while(|s| !s.eq(";")) // strip comments
         .collect();
     match tokens.len() {
         0 => None,
         _ => Some(tokens),
     }
-}
-
-pub fn extract(lines: &mut Vec<Line>) -> HashMap<String, usize> {
-    // Extract symbols from source
-    let mut idx = 0;
-    let mut symbols = HashMap::new();
-    lines.retain(|line| {
-        let tokens = &line.tokens;
-        // Check if we have a symbol
-        let is_symbol = tokens.len() == 2 && is_word(&tokens[0]) && &tokens[1] == SYMBOL;
-        if is_symbol {
-            // Move the symbol, keeping track of the index
-            symbols.insert(tokens[0].to_string(), idx);
-            false // remove symbol
-        } else {
-            idx += 1;
-            true // retain line
-        }
-    });
-    // Return extracted symbols
-    symbols
 }
 
 pub fn parse_reg(token: &str) -> Result<uarch> {
@@ -82,9 +56,9 @@ pub fn parse_reg(token: &str) -> Result<uarch> {
         "sp" => Some(13),
         "lr" => Some(14),
         "pc" => Some(15),
-        token => uarch::from_str_radix(&RE.captures(token)?.get(1)?.as_str(), 10).ok(),
+        token => uarch::from_str_radix(RE.captures(token)?.get(1)?.as_str(), 10).ok(),
     })()
-    .ok_or(ParseLexemeError::InvalidReg(token.to_string()))
+    .ok_or_else(|| ParseLexemeError::InvalidReg(token.to_string()))
 }
 
 pub fn parse_imm(token: &str) -> Result<uarch> {
@@ -101,12 +75,5 @@ pub fn parse_imm(token: &str) -> Result<uarch> {
             _ => None,
         }
     })()
-    .ok_or(ParseLexemeError::InvalidImm(token.to_string()))
-}
-
-fn is_word(token: &str) -> bool {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"^\w+$").unwrap();
-    }
-    RE.is_match(token)
+    .ok_or_else(|| ParseLexemeError::InvalidImm(token.to_string()))
 }

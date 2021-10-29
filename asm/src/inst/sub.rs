@@ -82,7 +82,7 @@ impl FromStr for Sub {
         let mode = match &*tokens[0] {
             "sub" => Mode::Sub,
             "rsb" => Mode::Rsb,
-            _ => Err(ParseInstructionError::BadInstruction)?,
+            _ => return Err(ParseInstructionError::BadInstruction.into()),
         };
         // Parse op1
         let op1 = lex::parse_reg(&tokens[1])?;

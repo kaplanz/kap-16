@@ -106,7 +106,7 @@ impl FromStr for Bra {
             "ble" | "blle" => Cond::Le,
             "bge" | "blge" => Cond::Ge,
             "bgt" | "blgt" => Cond::Gt,
-            _ => Err(ParseInstructionError::BadInstruction)?,
+            _ => return Err(ParseInstructionError::BadInstruction.into()),
         };
         // Parse link
         let link = tokens[0].len() % 2 == 0;

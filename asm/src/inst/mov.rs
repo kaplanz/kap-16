@@ -87,7 +87,7 @@ impl FromStr for Mov {
             "mov" => Mode::Mov,
             "neg" => Mode::Neg,
             "not" => Mode::Not,
-            _ => Err(ParseInstructionError::BadInstruction)?,
+            _ => return Err(ParseInstructionError::BadInstruction.into()),
         };
         // Parse op1
         let op1 = lex::parse_reg(&tokens[1])?;

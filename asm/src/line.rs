@@ -1,21 +1,26 @@
-use crate::{lex, uarch};
+use crate::lex;
+use crate::scope::Scope;
+
+#[derive(Clone, Debug)]
+pub enum Source {
+    Line(Line),
+    Scope(Scope),
+}
 
 #[derive(Clone, Debug)]
 pub struct Line {
     pub number: usize,
-    pub content: String,
+    pub text: String,
     pub tokens: Vec<String>,
-    pub word: Option<uarch>,
 }
 
 impl Line {
-    pub fn new(number: usize, content: String) -> Self {
-        let tokens = lex::tokenize(&content).unwrap_or_else(Vec::new); // tokenize line
-        Line {
+    pub fn new(number: usize, text: String) -> Self {
+        let tokens = lex::tokenize(&text).unwrap_or_else(Vec::new);
+        Self {
             number,
-            content,
+            text,
             tokens,
-            word: None,
         }
     }
 }

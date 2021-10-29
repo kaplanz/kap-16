@@ -84,7 +84,7 @@ impl FromStr for Op2 {
     }
 }
 
-pub fn assemble(line: &Vec<String>) -> Result<uarch, Box<dyn Error>> {
+pub fn assemble(line: &[String]) -> Result<uarch, Box<dyn Error>> {
     Ok(match &*line[0] {
         "add" => line.join(" ").parse::<Add>()?.into(),
         "and" => line.join(" ").parse::<And>()?.into(),
@@ -99,6 +99,6 @@ pub fn assemble(line: &Vec<String>) -> Result<uarch, Box<dyn Error>> {
         "str" | "push" => line.join(" ").parse::<Str>()?.into(),
         "sub" | "rsb" => line.join(" ").parse::<Sub>()?.into(),
         "xor" => line.join(" ").parse::<Xor>()?.into(),
-        _ => Err(ParseInstructionError::UnknownInstruction)?,
+        _ => return Err(ParseInstructionError::UnknownInstruction.into()),
     })
 }

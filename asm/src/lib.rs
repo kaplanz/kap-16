@@ -15,6 +15,7 @@ use log::error;
 mod inst;
 mod lex;
 mod line;
+mod scope;
 mod unit;
 mod util;
 
@@ -35,10 +36,7 @@ pub struct Assembler {
 
 impl Assembler {
     pub fn new() -> Self {
-        Self {
-            units: Default::default(),
-            words: Default::default(),
-        }
+        Default::default()
     }
 
     pub fn source(&mut self, src: &Path) -> Result<(), Box<dyn Error>> {

@@ -88,7 +88,7 @@ impl FromStr for Cmp {
             "cmn" => Mode::Cmn,
             "tst" => Mode::Tst,
             "teq" => Mode::Teq,
-            _ => Err(ParseInstructionError::BadInstruction)?,
+            _ => return Err(ParseInstructionError::BadInstruction.into()),
         };
         // Parse op1
         let op1 = lex::parse_reg(&tokens[1])?;
