@@ -21,25 +21,25 @@ fn main() {
     let mut a = Assembler::new();
     // Source each input file
     for file in &opts.srcs {
-        a.source(file).unwrap_or_else(|err| {
-            error!("`{}`: {}", file.display(), err);
+        a.src(file).unwrap_or_else(|err| {
+            eprintln!("{}: `{}`", err, file.display());
             process::exit(1);
         });
     }
     // Produce an assembled output
-    a.assemble().unwrap_or_else(|err| {
+    a.asm().unwrap_or_else(|err| {
         eprintln!("{}", err);
-        process::exit(2);
+        process::exit(1);
     });
     // Write output file
-    a.write(&opts.out).unwrap_or_else(|err| {
-        error!("`{}`: {}", &opts.out.display(), err);
+    a.out(&opts.out).unwrap_or_else(|err| {
+        error!("{}: `{}`", err, &opts.out.display());
         process::exit(1);
     });
 }
 
 /// Assembler for the KAP-16 processor.
-#[derive(Parser, Debug)]
+#[derive(Debug, Parser)]
 #[clap(author = crate_authors!())]
 #[clap(version = crate_version!())]
 struct Opts {
@@ -54,7 +54,7 @@ struct Opts {
     #[clap(short)]
     #[clap(long)]
     #[clap(parse(from_os_str))]
-    #[clap(default_value = "a.rom")]
+    #[clap(default_value = "a.out")]
     #[clap(value_hint = ValueHint::FilePath)]
     out: PathBuf,
 

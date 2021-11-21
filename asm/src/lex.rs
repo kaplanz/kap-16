@@ -7,30 +7,7 @@ use regex::Regex;
 
 use crate::uarch;
 
-#[derive(Debug)]
-pub enum ParseLexemeError {
-    EmptyToken,
-    InvalidReg(String),
-    InvalidImm(String),
-}
-
-impl Display for ParseLexemeError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Self::EmptyToken => "Found empty token; expected content".to_string(),
-                Self::InvalidReg(token) => format!("Could not parse register from `{}`", token),
-                Self::InvalidImm(token) => format!("Could not parse immediate from `{}`", token),
-            }
-        )
-    }
-}
-
-impl Error for ParseLexemeError {}
-
-type Result<T> = result::Result<T, ParseLexemeError>;
+type Result<T> = result::Result<T, LexemeError>;
 
 pub fn tokenize(line: &str) -> Option<Vec<String>> {
     lazy_static! {
@@ -58,7 +35,7 @@ pub fn parse_reg(token: &str) -> Result<uarch> {
         "pc" => Some(15),
         token => uarch::from_str_radix(RE.captures(token)?.get(1)?.as_str(), 10).ok(),
     })()
-    .ok_or_else(|| ParseLexemeError::InvalidReg(token.to_string()))
+    .ok_or_else(|| LexemeError::InvalidReg(token.to_string()))
 }
 
 pub fn parse_imm(token: &str) -> Result<uarch> {
@@ -75,5 +52,28 @@ pub fn parse_imm(token: &str) -> Result<uarch> {
             _ => None,
         }
     })()
-    .ok_or_else(|| ParseLexemeError::InvalidImm(token.to_string()))
+    .ok_or_else(|| LexemeError::InvalidImm(token.to_string()))
 }
+
+#[derive(Debug)]
+pub enum LexemeError {
+    EmptyToken,
+    InvalidReg(String),
+    InvalidImm(String),
+}
+
+impl Display for LexemeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::EmptyToken => "Found empty token; expected content".to_string(),
+                Self::InvalidReg(token) => format!("Could not parse register from `{}`", token),
+                Self::InvalidImm(token) => format!("Could not parse immediate from `{}`", token),
+            }
+        )
+    }
+}
+
+impl Error for LexemeError {}

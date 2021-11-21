@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{self, Display};
 use std::str::FromStr;
 
-use super::{Instruction, Op2, ParseInstructionError};
+use super::{Instruction, InstructionError, Op2};
 use crate::{iarch, lex, uarch, util, WORDSIZE};
 
 #[derive(Debug)]
@@ -90,12 +90,12 @@ impl FromStr for Bra {
         // (also creates an owned String from &str)
         let s = s.to_lowercase();
         // Split into constituent tokens
-        let tokens = lex::tokenize(&s).ok_or(ParseInstructionError::EmptyStr)?;
+        let tokens = lex::tokenize(&s).ok_or(InstructionError::EmptyStr)?;
         // Ensure correct number of tokens
         match tokens.len().cmp(&2) {
-            Ordering::Less => Err(ParseInstructionError::MissingOps),
+            Ordering::Less => Err(InstructionError::MissingOps),
             Ordering::Equal => Ok(()),
-            Ordering::Greater => Err(ParseInstructionError::ExtraOps),
+            Ordering::Greater => Err(InstructionError::ExtraOps),
         }?;
         // Parse cond
         let cond = match &*tokens[0] {
@@ -106,7 +106,7 @@ impl FromStr for Bra {
             "ble" | "blle" => Cond::Le,
             "bge" | "blge" => Cond::Ge,
             "bgt" | "blgt" => Cond::Gt,
-            _ => return Err(ParseInstructionError::BadInstruction.into()),
+            _ => return Err(InstructionError::BadInstruction.into()),
         };
         // Parse link
         let link = tokens[0].len() % 2 == 0;
@@ -116,7 +116,7 @@ impl FromStr for Bra {
         match op2 {
             Op2::Reg(reg) if reg < 0x10 => Ok(()),
             Op2::Imm(imm) if (imm as iarch) < 0x80 && (imm as usize % WORDSIZE == 0) => Ok(()),
-            _ => Err(ParseInstructionError::InvalidOp),
+            _ => Err(InstructionError::InvalidOp),
         }?;
         // Create Self from parts
         Ok(Self { op2, link, cond })

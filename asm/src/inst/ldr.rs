@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{self, Display};
 use std::str::FromStr;
 
-use super::{Instruction, Op2, ParseInstructionError};
+use super::{Instruction, InstructionError, Op2};
 use crate::{iarch, lex, uarch, util, WORDSIZE};
 
 #[derive(Debug)]
@@ -82,16 +82,16 @@ impl FromStr for Ldr {
         // (also creates an owned String from &str)
         let s = s.to_lowercase();
         // Split into constituent tokens
-        let tokens = lex::tokenize(&s).ok_or(ParseInstructionError::EmptyStr)?;
+        let tokens = lex::tokenize(&s).ok_or(InstructionError::EmptyStr)?;
         // Ensure at least one token
         (!tokens.is_empty())
             .then(|| ())
-            .ok_or(ParseInstructionError::MissingOps)?;
+            .ok_or(InstructionError::MissingOps)?;
         // Parse mode
         let mode = match &*tokens[0] {
             "ldr" => Mode::Ldr,
             "pop" => Mode::Pop,
-            _ => return Err(ParseInstructionError::BadInstruction.into()),
+            _ => return Err(InstructionError::BadInstruction.into()),
         };
         let ntokens = match mode {
             Mode::Ldr => 4,
@@ -99,23 +99,23 @@ impl FromStr for Ldr {
         };
         // Ensure correct number of tokens
         match tokens.len().cmp(&ntokens) {
-            Ordering::Less => Err(ParseInstructionError::MissingOps),
+            Ordering::Less => Err(InstructionError::MissingOps),
             Ordering::Equal => Ok(()),
-            Ordering::Greater => Err(ParseInstructionError::ExtraOps),
+            Ordering::Greater => Err(InstructionError::ExtraOps),
         }?;
         // Parse op1
         let op1 = lex::parse_reg(&tokens[1])?;
         // Ensure validity of op1
         (op1 < 0x10)
             .then(|| ())
-            .ok_or(ParseInstructionError::InvalidOp)?;
+            .ok_or(InstructionError::InvalidOp)?;
         // Parse for Mode::Ldr
         let op2 = match mode {
             Mode::Ldr => {
                 // Look for "," separator
                 (tokens[2] == ",")
                     .then(|| ())
-                    .ok_or(ParseInstructionError::ExpectedSep)?;
+                    .ok_or(InstructionError::ExpectedSep)?;
                 // Parse op2
                 let op2 = tokens[3].parse()?;
                 // Ensure validity of op2
@@ -124,7 +124,7 @@ impl FromStr for Ldr {
                     Op2::Imm(imm) if (imm as iarch) < 0x80 && (imm as usize % WORDSIZE == 0) => {
                         Ok(())
                     }
-                    _ => Err(ParseInstructionError::InvalidOp),
+                    _ => Err(InstructionError::InvalidOp),
                 }?;
                 op2
             }

@@ -5,21 +5,22 @@
 use std::error::Error;
 use std::fmt::{self, Display};
 use std::fs::File;
-use std::io::{self, Write};
+use std::io::{self, BufRead, BufReader, Write};
+use std::mem;
 use std::path::{Path, PathBuf};
-use std::{mem, process};
 
 use colored::Colorize;
-use log::error;
+use line::Line;
 
 mod inst;
 mod lex;
 mod line;
+mod prep;
 mod scope;
 mod unit;
 mod util;
 
-use self::unit::Unit;
+use crate::unit::Unit;
 
 #[allow(non_camel_case_types)]
 type iarch = i16;
@@ -39,11 +40,22 @@ impl Assembler {
         Default::default()
     }
 
-    pub fn source(&mut self, src: &Path) -> Result<(), Box<dyn Error>> {
-        // Create a unit for this file
-        let unit = Unit::new(src.to_path_buf())?;
+    pub fn src(&mut self, path: &Path) -> Result<(), Box<dyn Error>> {
+        // Open the input file
+        let f = File::open(&path)?;
+        // Read lines from file
+        let mut lines: Vec<Line> = BufReader::new(f)
+            .lines()
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .enumerate()
+            .map(|(idx, line)| Line::new(idx, line))
+            .filter(|line| !line.tokens.is_empty())
+            .collect();
         // Perform preprocessing
-        // TODO
+        prep::prep(&mut lines);
+        // Create a unit for this file
+        let unit = Unit::new(path.to_path_buf(), lines);
         // Ensure no duplicate symbols
         // TODO
         // Create translation unit
@@ -51,25 +63,21 @@ impl Assembler {
         Ok(())
     }
 
-    pub fn assemble(&mut self) -> Result<(), AssemblerError> {
+    pub fn asm(&mut self) -> Result<(), Box<dyn Error>> {
         // Concatenate translation units
-        let mut unit = self
+        // TODO: keep track of source file when concatenating
+        let unit = self.units.pop().unwrap_or_else(|| Unit::default());
+        let unit = self
             .units
             .clone()
             .into_iter()
-            .reduce(|a, b| a.concat(b).unwrap_or_else(|| process::exit(1))) // XXX
-            .unwrap_or_else(|| {
-                error!("No sources to assemble!");
-                process::exit(1);
-            });
-        // Replace symbols with their corresponding addresses
-        unit.relocate();
-        // Convert unit into binary
-        self.words = unit.assemble()?;
+            .try_fold(unit, Unit::concat)?;
+        // Assemble unit into binary
+        self.words = unit.asm()?;
         Ok(())
     }
 
-    pub fn write(&self, out: &Path) -> io::Result<()> {
+    pub fn out(&self, out: &Path) -> io::Result<()> {
         // Write to the output file
         let mut f = File::create(out)?;
         f.write_all(
@@ -83,22 +91,41 @@ impl Assembler {
 }
 
 #[derive(Debug)]
-pub struct AssemblerError {
+pub struct AsmError {
     err: Box<dyn Error>,
-    loc: (PathBuf, usize),
-    line: String,
 }
 
-impl Display for AssemblerError {
+impl Display for AsmError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let lineno = format!("{}", self.loc.1);
-        writeln!(
+        write!(
             f,
             "{}{} {}",
             "error".red().bold(),
             ":".bold(),
             format!("{}", self.err).bold(),
-        )?;
+        )
+    }
+}
+
+impl Error for AsmError {}
+
+impl From<Box<dyn Error>> for AsmError {
+    fn from(err: Box<dyn Error>) -> Self {
+        Self { err }
+    }
+}
+
+#[derive(Debug)]
+pub struct VerboseError {
+    err: AsmError,
+    loc: (PathBuf, usize),
+    line: String,
+}
+
+impl Display for VerboseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let lineno = format!("{}", self.loc.1);
+        writeln!(f, "{}", self.err)?;
         writeln!(
             f,
             "{}{} {}:{}",
@@ -113,7 +140,7 @@ impl Display for AssemblerError {
     }
 }
 
-impl Error for AssemblerError {}
+impl Error for VerboseError {}
 
 #[cfg(test)]
 mod tests {}

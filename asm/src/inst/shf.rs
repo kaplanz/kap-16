@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt::{self, Display};
 use std::str::FromStr;
 
-use super::{Instruction, Op2, ParseInstructionError};
+use super::{Instruction, InstructionError, Op2};
 use crate::{lex, uarch};
 
 #[derive(Clone, Copy, Debug)]
@@ -79,12 +79,12 @@ impl FromStr for Shf {
         // (also creates an owned String from &str)
         let s = s.to_lowercase();
         // Split into constituent tokens
-        let tokens = lex::tokenize(&s).ok_or(ParseInstructionError::EmptyStr)?;
+        let tokens = lex::tokenize(&s).ok_or(InstructionError::EmptyStr)?;
         // Ensure correct number of tokens
         match tokens.len().cmp(&4) {
-            Ordering::Less => Err(ParseInstructionError::MissingOps),
+            Ordering::Less => Err(InstructionError::MissingOps),
             Ordering::Equal => Ok(()),
-            Ordering::Greater => Err(ParseInstructionError::ExtraOps),
+            Ordering::Greater => Err(InstructionError::ExtraOps),
         }?;
         // Parse mode
         let mode = match &*tokens[0] {
@@ -94,24 +94,24 @@ impl FromStr for Shf {
             "lsl" => Mode::Lsl,
             "asl" => Mode::Asl,
             "rol" => Mode::Rol,
-            _ => return Err(ParseInstructionError::BadInstruction.into()),
+            _ => return Err(InstructionError::BadInstruction.into()),
         };
         // Parse op1
         let op1 = lex::parse_reg(&tokens[1])?;
         // Look for "," separator
         (tokens[2] == ",")
             .then(|| ())
-            .ok_or(ParseInstructionError::ExpectedSep)?;
+            .ok_or(InstructionError::ExpectedSep)?;
         // Parse op2
         let op2 = tokens[3].parse()?;
         // Ensure validity of ops
         (op1 < 0x10)
             .then(|| ())
-            .ok_or(ParseInstructionError::InvalidOp)?;
+            .ok_or(InstructionError::InvalidOp)?;
         match op2 {
             Op2::Reg(reg) if reg < 0x10 => Ok(()),
             Op2::Imm(imm) if imm < 0x10 => Ok(()),
-            _ => Err(ParseInstructionError::InvalidOp),
+            _ => Err(InstructionError::InvalidOp),
         }?;
         // Create Self from parts
         Ok(Self { op1, op2, mode })

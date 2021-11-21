@@ -1,51 +1,33 @@
 use std::collections::HashSet;
-use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::error::Error;
+use std::fmt::{self, Display};
 use std::path::PathBuf;
 
-use log::error;
-
-use crate::line::{Line, Source};
+use crate::line::Line;
 use crate::scope::Scope;
-use crate::{inst, uarch, AssemblerError};
+use crate::{inst, uarch, VerboseError};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Unit {
-    src: PathBuf,
+    path: PathBuf,
     global: Scope,
 }
 
 impl Unit {
-    pub fn new(src: PathBuf) -> io::Result<Self> {
-        // Open the input file
-        let f = File::open(&src)?;
-        // Read lines from file
-        let lines: Vec<Line> = BufReader::new(f)
-            .lines()
-            .collect::<Result<Vec<_>, _>>()?
-            .into_iter()
-            .enumerate()
-            .map(|(idx, line)| Line::new(idx, line))
-            .filter(|line| !line.tokens.is_empty())
-            .collect();
-        // Parse global scope from file
-        let global = Scope::new(lines);
-        // Return this translation unit
-        Ok(Self { src, global })
+    pub fn new(path: PathBuf, lines: Vec<Line>) -> Self {
+        Self {
+            path,
+            global: Scope::new(lines),
+        }
     }
 
-    pub fn concat(mut self, mut other: Unit) -> Option<Self> {
+    pub fn concat(mut self, mut other: Unit) -> Result<Self, UnitError> {
         // Ensure no duplicate symbols
         let set1: HashSet<String> = self.global.symbols.keys().cloned().collect();
         let set2: HashSet<String> = other.global.symbols.keys().cloned().collect();
-        let dups: Vec<_> = set1.intersection(&set2).collect();
+        let dups: Vec<_> = set1.intersection(&set2).cloned().collect();
         if !dups.is_empty() {
-            error!(
-                "Duplicate symbol(s) from `{}`: {:?}",
-                other.src.display(),
-                dups
-            );
-            return None;
+            return Err(UnitError::DuplicateSymbols(dups));
         }
         // Increment indices in other unit's symbols
         other
@@ -53,32 +35,47 @@ impl Unit {
             .symbols
             .iter_mut()
             .for_each(|(_, idx)| *idx += self.global.source.len());
-        // Concatonate translation units
+        // Concatenate translation units
         self.global.source.extend(other.global.source);
         self.global.symbols.extend(other.global.symbols);
         // Return combined unit
-        Some(self)
+        Ok(self)
     }
 
-    pub fn relocate(&mut self) -> u8 {
-        todo!();
-    }
-
-    pub fn assemble(&self) -> Result<Vec<uarch>, AssemblerError> {
-        self.global
-            .source
-            .iter()
-            .map(|source| match source {
-                Source::Line(line) => line,
-                _ => panic!("Expected Source::Line(_)"), // FIXME
-            })
+    pub fn asm(mut self) -> Result<Vec<uarch>, VerboseError> {
+        // Perform symbol substitutions
+        self.global.subst();
+        // Flatten the global scope
+        let lines = self.global.flatten();
+        // Assemble instructions
+        lines
+            .into_iter()
             .map(|line| {
-                inst::assemble(&line.tokens).map_err(|err| AssemblerError {
-                    err,
-                    loc: (self.src.clone(), line.number),
+                inst::asm(&line.tokens).map_err(|err| VerboseError {
+                    err: From::from(err),
+                    loc: (self.path.clone(), line.number),
                     line: line.text.clone(),
                 })
             })
             .collect()
     }
 }
+
+#[derive(Debug)]
+pub enum UnitError {
+    DuplicateSymbols(Vec<String>),
+}
+
+impl Display for UnitError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::DuplicateSymbols(dups) => format!("Duplicate symbols: {:?}", dups),
+            }
+        )
+    }
+}
+
+impl Error for UnitError {}

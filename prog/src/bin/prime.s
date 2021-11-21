@@ -4,11 +4,10 @@
 ; Version:     0.1.0
 ; SPDX-License-Identifier: MIT
 
-.init sp 0x4000
-
 .entry
 .func
 _main:
+    ldr sp, =0x4000
     mov g0, 0d32        ; let cur: g0 = 32
 loop:
     mov a0, g0

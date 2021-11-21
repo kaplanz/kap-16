@@ -3,7 +3,7 @@ use std::fmt;
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
 
-use crate::lex::ParseLexemeError;
+use crate::lex::LexemeError;
 use crate::{lex, uarch};
 
 mod add;
@@ -34,8 +34,43 @@ use self::xor::Xor;
 
 trait Instruction: Debug + Display + FromStr {}
 
+pub fn asm(line: &[String]) -> Result<uarch, Box<dyn Error>> {
+    Ok(match &*line[0] {
+        "add" => line.join(" ").parse::<Add>()?.into(),
+        "and" => line.join(" ").parse::<And>()?.into(),
+        "call" | "goto" => line.join(" ").parse::<Bra>()?.into(),
+        "cmp" | "cmn" | "tst" | "teq" => line.join(" ").parse::<Cmp>()?.into(),
+        "ldr" | "pop" => line.join(" ").parse::<Ldr>()?.into(),
+        "mov" | "neg" | "not" => line.join(" ").parse::<Mov>()?.into(),
+        "mul" => line.join(" ").parse::<Mul>()?.into(),
+        "orr" => line.join(" ").parse::<Orr>()?.into(),
+        "lsr" | "asr" | "ror" | "lsl" | "asl" | "rol" => line.join(" ").parse::<Shf>()?.into(),
+        "str" | "push" => line.join(" ").parse::<Str>()?.into(),
+        "sub" | "rsb" => line.join(" ").parse::<Sub>()?.into(),
+        "xor" => line.join(" ").parse::<Xor>()?.into(),
+        _ => return Err(InstructionError::UnknownInstruction.into()),
+    })
+}
+
+#[derive(Debug)]
+enum Op2 {
+    Reg(uarch),
+    Imm(uarch),
+}
+
+impl FromStr for Op2 {
+    type Err = LexemeError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s.chars().next().ok_or(LexemeError::EmptyToken)? {
+            '0' => Op2::Imm(lex::parse_imm(s)?),
+            _ => Op2::Reg(lex::parse_reg(s)?),
+        })
+    }
+}
+
 #[derive(Clone, Debug)]
-pub enum ParseInstructionError {
+pub enum InstructionError {
     EmptyStr,
     MissingOps,
     ExtraOps,
@@ -45,7 +80,7 @@ pub enum ParseInstructionError {
     UnknownInstruction,
 }
 
-impl Display for ParseInstructionError {
+impl Display for InstructionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -63,42 +98,4 @@ impl Display for ParseInstructionError {
     }
 }
 
-impl Error for ParseInstructionError {}
-
-#[derive(Debug)]
-enum Op2 {
-    Reg(uarch),
-    Imm(uarch),
-}
-
-impl FromStr for Op2 {
-    type Err = ParseLexemeError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(
-            match s.chars().next().ok_or(ParseLexemeError::EmptyToken)? {
-                '0' => Op2::Imm(lex::parse_imm(s)?),
-                _ => Op2::Reg(lex::parse_reg(s)?),
-            },
-        )
-    }
-}
-
-pub fn assemble(line: &[String]) -> Result<uarch, Box<dyn Error>> {
-    Ok(match &*line[0] {
-        "add" => line.join(" ").parse::<Add>()?.into(),
-        "and" => line.join(" ").parse::<And>()?.into(),
-        "b" | "bl" | "beq" | "bleq" | "bne" | "blne" | "blt" | "bllt" | "ble" | "blle" | "bge"
-        | "blge" | "bgt" | "blgt" => line.join(" ").parse::<Bra>()?.into(),
-        "cmp" | "cmn" | "tst" | "teq" => line.join(" ").parse::<Cmp>()?.into(),
-        "ldr" | "pop" => line.join(" ").parse::<Ldr>()?.into(),
-        "mov" | "neg" | "not" => line.join(" ").parse::<Mov>()?.into(),
-        "mul" => line.join(" ").parse::<Mul>()?.into(),
-        "orr" => line.join(" ").parse::<Orr>()?.into(),
-        "lsr" | "asr" | "ror" | "lsl" | "asl" | "rol" => line.join(" ").parse::<Shf>()?.into(),
-        "str" | "push" => line.join(" ").parse::<Str>()?.into(),
-        "sub" | "rsb" => line.join(" ").parse::<Sub>()?.into(),
-        "xor" => line.join(" ").parse::<Xor>()?.into(),
-        _ => return Err(ParseInstructionError::UnknownInstruction.into()),
-    })
-}
+impl Error for InstructionError {}
