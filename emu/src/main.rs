@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::process;
 
-use clap::{crate_authors, crate_version, Parser, ValueHint};
+use clap::{Parser, ValueHint};
 use emu::Emulator;
 use env_logger as logger;
 use log::error;
@@ -15,13 +15,13 @@ fn main() {
         .parse_default_env()
         .init();
     // Parse opts
-    let opts = Opts::parse();
+    let args = Args::parse();
 
     // Instantiate an emulator
     let mut e = Emulator::new();
     // Load the ROM into memory
-    e.load(&opts.rom).unwrap_or_else(|err| {
-        error!("`{}`: {}", &opts.rom.display(), err);
+    e.load(&args.rom).unwrap_or_else(|err| {
+        error!("`{}`: {}", &args.rom.display(), err);
         process::exit(1)
     });
     // Run the emulator
@@ -30,17 +30,15 @@ fn main() {
 
 /// Emulator for the KAP-16 processor.
 #[derive(Parser, Debug)]
-#[clap(author = crate_authors!())]
-#[clap(version = crate_version!())]
-struct Opts {
+#[clap(author, version, about)]
+struct Args {
     /// Input ROM file
     #[clap(parse(from_os_str))]
     #[clap(value_hint = ValueHint::FilePath)]
     rom: PathBuf,
 
     /// Use verbose output (-v, -vv, -vvv, etc.)
-    #[clap(short)]
-    #[clap(long)]
+    #[clap(short, long)]
     #[clap(parse(from_occurrences))]
     verbose: u8,
 }
