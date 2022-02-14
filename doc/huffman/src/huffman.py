@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # File:        huffman.py
-# Author:      Zakhary Kaplan <https://zakharykaplan.ca>
+# Author:      Zakhary Kaplan <https://zakhary.dev>
 # Created:     18 Jul 2021
 # Version:     0.1.0
 # Description: Huffman coding calculator.

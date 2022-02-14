@@ -1,5 +1,5 @@
 ; File:        fib.s
-; Author:      Zakhary Kaplan <https://zakharykaplan.ca>
+; Author:      Zakhary Kaplan <https://zakhary.dev>
 ; Created:     22 Jul 2021
 ; Version:     0.1.0
 ; SPDX-License-Identifier: MIT
