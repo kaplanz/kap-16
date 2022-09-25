@@ -1,7 +1,7 @@
 # kap-16
 
 <p align="center">
-  <img width="100" height="100" src="./doc/assets/img/cpu.svg"/>
+  <img width="100" height="100" src="./docs/assets/img/cpu.svg"/>
 </p>
 
 <p align="center">
